@@ -1,0 +1,39 @@
+<section class="login">
+  <div class="login-story">
+    <div class="brand">
+      <span class="mark">A</span>
+      <span>Aangan</span>
+    </div>
+    <p class="eyebrow">Restaurant operating system</p>
+    <h1>Every house.<br />One set of keys.</h1>
+    <p class="lede">
+      Open a restaurant, hand it a menu, a floor and a bill desk, and take any of them back.
+      The platform admin decides what each house can touch.
+    </p>
+    <ul class="story-points">
+      <li><strong>Many restaurants</strong><span>Each house keeps its own admin, staff and modules.</span></li>
+      <li><strong>Nothing is erased</strong><span>Archive is a soft delete. The row, the IP and the time stay.</span></li>
+      <li><strong>Desks, not a dump</strong><span>Billing, QR orders, tokens, inventory, HR and attendance unlock one by one.</span></li>
+    </ul>
+  </div>
+
+  <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
+    <p class="eyebrow">Sign in</p>
+    <h2>Welcome back to the desk.</h2>
+    <label>
+      Email
+      <input type="email" formControlName="email" autocomplete="username" placeholder="you@house.com" />
+    </label>
+    <label>
+      Password
+      <input type="password" formControlName="password" autocomplete="current-password" placeholder="Your password" />
+    </label>
+    @if (error()) {
+      <p class="banner bad">{{ error() }}</p>
+    }
+    <button class="btn solid" type="submit" [disabled]="busy()">
+      {{ busy() ? 'Checking the book…' : 'Enter the house' }}
+    </button>
+    <p class="fine">Platform seed: superadmin&#64;aangan.local · SuperAdmin&#64;123</p>
+  </form>
+</section>

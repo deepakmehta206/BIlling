@@ -1,0 +1,26 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/">
+      <span class="mark">A</span>
+      <span>Aangan</span>
+    </a>
+    <p class="side-kicker">{{ roleLabel() }}</p>
+    <nav>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
+      @if (auth.isSuperAdmin()) {
+        <a routerLink="/restaurants" routerLinkActive="active">Restaurants</a>
+      } @else if (auth.user()?.restaurantId) {
+        <a [routerLink]="['/restaurants', auth.user()!.restaurantId]" routerLinkActive="active">Your house</a>
+      }
+      <a routerLink="/audit" routerLinkActive="active">Audit</a>
+    </nav>
+    <div class="side-user">
+      <strong>{{ auth.user()?.fullName }}</strong>
+      <span>{{ auth.user()?.email }}</span>
+      <button type="button" class="btn ghost tiny" (click)="auth.logout()">Sign out</button>
+    </div>
+  </aside>
+  <main class="stage">
+    <router-outlet />
+  </main>
+</div>

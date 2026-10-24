@@ -1,0 +1,79 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ auth.isSuperAdmin() ? 'Platform' : auth.user()?.restaurantName }}</p>
+    <h1>{{ auth.isSuperAdmin() ? 'The houses on your books.' : 'Your house, as the platform left it.' }}</h1>
+  </div>
+  @if (auth.isSuperAdmin()) {
+    <a class="btn solid" routerLink="/restaurants/new">Open a restaurant</a>
+  }
+</header>
+
+@if (error()) {
+  <p class="banner bad">{{ error() }}</p>
+} @else if (!data()) {
+  <p class="muted">Opening the book…</p>
+} @else {
+  <section class="stats">
+    <article>
+      <span>Restaurants</span>
+      <strong>{{ data()!.restaurants }}</strong>
+      <em>{{ data()!.activeRestaurants }} active</em>
+    </article>
+    <article>
+      <span>Staff logins</span>
+      <strong>{{ data()!.staff }}</strong>
+      <em>Admins and the team</em>
+    </article>
+    <article>
+      <span>Audit today</span>
+      <strong>{{ data()!.auditsToday }}</strong>
+      <em>Sign-ins and changes</em>
+    </article>
+  </section>
+
+  <section class="split">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Module keys</h2>
+        <p>{{ auth.isSuperAdmin() ? 'How many houses have each desk turned on.' : 'Granted to this house.' }}</p>
+      </div>
+      <ul class="module-board">
+        @for (module of data()!.modules; track module.code) {
+          <li>
+            <div>
+              <strong>{{ module.name }}</strong>
+              <span>{{ module.code }}</span>
+            </div>
+            @if (auth.isSuperAdmin()) {
+              <em>{{ module.enabledCount }}/{{ module.restaurantCount }}</em>
+            } @else {
+              <em [class.on]="module.enabledCount > 0">{{ module.enabledCount > 0 ? 'On' : 'Off' }}</em>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Latest ink</h2>
+        <a routerLink="/audit">Full audit</a>
+      </div>
+      @if (data()!.recent.length === 0) {
+        <p class="muted">No activity yet. Open a restaurant and the book starts.</p>
+      } @else {
+        <ol class="timeline">
+          @for (entry of data()!.recent; track entry.id) {
+            <li>
+              <div>
+                <strong>{{ entry.description }}</strong>
+                <span>{{ entry.actorEmail || 'system' }} · {{ entry.ipAddress || 'no ip' }}</span>
+              </div>
+              <time>{{ entry.createdAt | date: 'd MMM, h:mm a' }}</time>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+  </section>
+}

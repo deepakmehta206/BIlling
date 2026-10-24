@@ -1,0 +1,141 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ isNew() ? 'New house' : house()?.code }}</p>
+    <h1>{{ isNew() ? 'Open a restaurant.' : house()?.name }}</h1>
+  </div>
+  @if (auth.isSuperAdmin()) {
+    <a class="btn ghost" routerLink="/restaurants">All restaurants</a>
+  }
+</header>
+
+@if (error()) {
+  <p class="banner bad">{{ error() }}</p>
+}
+
+<form class="editor" [formGroup]="form" (ngSubmit)="save()">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>The house</h2>
+      <p>What the guest and the tax desk both need to recognise.</p>
+    </div>
+    <div class="fields">
+      <label>Name<input formControlName="name" placeholder="Saffron & Stone" /></label>
+      <label>Legal name<input formControlName="legalName" placeholder="Optional" /></label>
+      <label>Code<input formControlName="code" placeholder="{{ isNew() ? 'Leave blank to generate' : '' }}" /></label>
+      <label>City<input formControlName="city" /></label>
+      <label>State<input formControlName="state" /></label>
+      <label>Phone<input formControlName="phone" /></label>
+      <label class="wide">Address<input formControlName="address" /></label>
+      <label>Email<input type="email" formControlName="email" /></label>
+      <label>GSTIN<input formControlName="gstin" maxlength="15" /></label>
+      <label>UPI id<input formControlName="upiId" placeholder="house@okbank" /></label>
+      @if (!isNew()) {
+        <label class="check">
+          <input type="checkbox" formControlName="isActive" />
+          House is active and its staff can sign in
+        </label>
+      }
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Owner</h2>
+      <p>The person who will get the bill on WhatsApp in a later phase.</p>
+    </div>
+    <div class="fields">
+      <label>Owner name<input formControlName="ownerName" /></label>
+      <label>Owner phone<input formControlName="ownerPhone" /></label>
+    </div>
+  </section>
+
+  @if (isNew()) {
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Restaurant admin</h2>
+        <p>This login runs only this house. You can change their modules after saving.</p>
+      </div>
+      <div class="fields">
+        <label>Full name<input formControlName="adminFullName" /></label>
+        <label>Phone<input formControlName="adminPhone" /></label>
+        <label>Email<input type="email" formControlName="adminEmail" /></label>
+        <label>Password<input type="password" formControlName="adminPassword" placeholder="8+ chars, letter and number" /></label>
+      </div>
+    </section>
+  } @else if (house()?.admin) {
+    <section class="panel admin-strip">
+      <div>
+        <p class="eyebrow">Restaurant admin</p>
+        <h2>{{ house()?.admin?.fullName }}</h2>
+        <p>{{ house()?.admin?.email }} · {{ house()?.admin?.phone }}</p>
+      </div>
+      <span class="pill" [class.off]="!house()!.admin!.isActive">Can sign in</span>
+    </section>
+  }
+
+  @if (auth.isSuperAdmin()) {
+    <div class="form-actions">
+      <button class="btn solid" type="submit" [disabled]="busy()">
+        {{ busy() ? 'Saving…' : isNew() ? 'Open this house' : 'Save details' }}
+      </button>
+    </div>
+  }
+</form>
+
+@if (!isNew() && house()) {
+  <section class="panel module-panel">
+    <div class="panel-head">
+      <h2>Module keys</h2>
+      <p>
+        {{
+          auth.isSuperAdmin()
+            ? 'Turn a desk off and this house loses it. The choice is written to the audit, with your IP.'
+            : 'The platform admin decides which desks this house can open.'
+        }}
+      </p>
+    </div>
+    <ul class="module-list">
+      @for (module of modules(); track module.code) {
+        <li>
+          <div>
+            <strong>{{ module.name }}</strong>
+            <span>{{ module.description }}</span>
+          </div>
+          @if (auth.isSuperAdmin()) {
+            <button
+              type="button"
+              class="switch"
+              [class.on]="module.isEnabled"
+              [attr.aria-pressed]="module.isEnabled"
+              (click)="toggle(module)"
+            >
+              <span></span>
+              {{ module.isEnabled ? 'On' : 'Off' }}
+            </button>
+          } @else {
+            <em class="pill" [class.off]="!module.isEnabled">{{ module.isEnabled ? 'Granted' : 'Locked' }}</em>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+
+  <p class="meta-line">
+    Created {{ house()!.createdAt | date: 'd MMM y, h:mm a' }} from {{ house()!.createdIp || 'unknown IP' }}
+    @if (house()!.updatedAt) {
+      · Updated {{ house()!.updatedAt | date: 'd MMM y, h:mm a' }} from {{ house()!.updatedIp || 'unknown IP' }}
+    }
+  </p>
+
+  @if (auth.isSuperAdmin()) {
+    <section class="danger">
+      <div>
+        <h2>Archive this house</h2>
+        <p>Soft delete. The restaurant, its admin and its module keys stay in SQL Server, marked deleted, with your IP.</p>
+      </div>
+      <button type="button" class="btn danger" [disabled]="busy()" (click)="archive()">
+        {{ confirmArchive() ? 'Yes, archive it' : 'Archive' }}
+      </button>
+    </section>
+  }
+}

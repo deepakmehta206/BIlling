@@ -1,0 +1,44 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Houses</p>
+    <h1>Restaurants on the platform.</h1>
+  </div>
+  <a class="btn solid" routerLink="/restaurants/new">Open a restaurant</a>
+</header>
+
+<div class="search-row">
+  <input type="search" [formControl]="search" placeholder="Search name, city, code or owner" />
+</div>
+
+@if (error()) {
+  <p class="banner bad">{{ error() }}</p>
+} @else if (!houses()) {
+  <p class="muted">Looking through the book…</p>
+} @else if (houses()!.length === 0) {
+  <section class="empty">
+    <p class="eyebrow">Empty floor</p>
+    <h2>No restaurant matches.</h2>
+    <p>Open the first house, then hand its admin a login and the modules they paid for.</p>
+    <a class="btn solid" routerLink="/restaurants/new">Open a restaurant</a>
+  </section>
+} @else {
+  <section class="house-grid">
+    @for (house of houses()!; track house.id) {
+      <a class="house-card" [routerLink]="['/restaurants', house.id]">
+        <div class="house-top">
+          <span class="code">{{ house.code }}</span>
+          <span class="pill" [class.off]="!house.isActive">{{ house.isActive ? 'Active' : 'Paused' }}</span>
+        </div>
+        <h2>{{ house.name }}</h2>
+        <p>{{ house.city || 'City not set' }} · {{ house.ownerName }}</p>
+        <div class="meter" aria-hidden="true">
+          <span [style.width.%]="house.totalModules ? (100 * house.enabledModules) / house.totalModules : 0"></span>
+        </div>
+        <footer>
+          <span>{{ house.enabledModules }}/{{ house.totalModules }} modules</span>
+          <span>{{ house.createdIp || 'no ip' }} · {{ house.createdAt | date: 'd MMM' }}</span>
+        </footer>
+      </a>
+    }
+  </section>
+}

@@ -1,0 +1,38 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Ledger</p>
+    <h1>Who touched the book.</h1>
+  </div>
+</header>
+
+@if (error()) {
+  <p class="banner bad">{{ error() }}</p>
+} @else if (!pageData()) {
+  <p class="muted">Reading the ledger…</p>
+} @else if (pageData()!.items.length === 0) {
+  <section class="empty">
+    <h2>The ledger is blank.</h2>
+    <p>Sign-ins, new houses and module changes land here with an IP address.</p>
+  </section>
+} @else {
+  <ol class="ledger">
+    @for (entry of pageData()!.items; track entry.id) {
+      <li>
+        <div class="ledger-main">
+          <span class="code">{{ entry.action }}</span>
+          <strong>{{ entry.description }}</strong>
+          <span>{{ entry.actorEmail || 'Unknown' }} · {{ entry.restaurantName || 'Platform' }}</span>
+        </div>
+        <div class="ledger-meta">
+          <span>{{ entry.ipAddress || 'No IP' }}</span>
+          <time>{{ entry.createdAt | date: 'd MMM y, h:mm a' }}</time>
+        </div>
+      </li>
+    }
+  </ol>
+  <div class="pager">
+    <button type="button" class="btn ghost" [disabled]="page() <= 1" (click)="load(page() - 1)">Previous</button>
+    <span>Page {{ page() }} of {{ lastPage }} · {{ pageData()!.total }} rows</span>
+    <button type="button" class="btn ghost" [disabled]="page() >= lastPage" (click)="load(page() + 1)">Next</button>
+  </div>
+}
