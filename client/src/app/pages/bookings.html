@@ -1,0 +1,49 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>Today's book.</h1>
+    </div>
+    <input type="date" [ngModel]="day()" (ngModelChange)="day.set($event); load()" name="day" />
+  </header>
+  @if (error()) { <p class="banner bad">{{ error() }}</p> }
+  <section class="split">
+    <div class="panel">
+      <ul class="ledger">
+        @for (row of rows(); track row.id) {
+          <li>
+            <div class="ledger-main">
+              <span class="code">{{ row.tableName }}</span>
+              <strong>{{ row.guestName }} · {{ row.guestCount }} guests</strong>
+              <span>{{ row.startsAt | date: 'h:mm a' }} – {{ row.endsAt | date: 'h:mm a' }} · {{ row.status }}</span>
+            </div>
+            @if (row.status === 'Booked') {
+              <button type="button" class="btn ghost tiny" (click)="cancel(row)">Cancel</button>
+            }
+          </li>
+        } @empty {
+          <li><p class="muted">No bookings on this day.</p></li>
+        }
+      </ul>
+    </div>
+    <form class="panel stack" (ngSubmit)="create()">
+      <h2>New booking</h2>
+      <label>Table
+        <select [ngModel]="tableId()" (ngModelChange)="tableId.set($event)" name="table">
+          @for (table of tables(); track table.id) {
+            <option [value]="table.id">{{ table.name }} · {{ table.capacity }} seats</option>
+          }
+        </select>
+      </label>
+      <label>Guest<input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" /></label>
+      <label>Phone<input [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="phone" /></label>
+      <label>Guests<input type="number" min="1" [ngModel]="guestCount()" (ngModelChange)="guestCount.set(+$event)" name="count" /></label>
+      <label>Starts<input type="datetime-local" [ngModel]="starts()" (ngModelChange)="starts.set($event)" name="starts" /></label>
+      <button class="btn solid" type="submit">Hold for 90 minutes</button>
+    </form>
+  </section>
+}

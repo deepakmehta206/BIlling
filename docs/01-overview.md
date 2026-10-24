@@ -6,7 +6,7 @@ What this product is, and who holds the keys.
 
 Aangan is a multi-restaurant billing platform. One company (the platform) hosts many restaurants. Each restaurant has its own admin, and later its own menu, floor, bills, stock and staff.
 
-Phase 1 delivers the platform itself: identity, restaurants, module grants, and an audit trail. Billing, QR ordering, tokens, bookings, inventory, HR and attendance are named and can be switched on, but their screens come in later phases.
+Phase 1 is the platform: identity, restaurants, module grants, and an audit trail. Phase 2 is the dining room: menu, a visual floor, table booking, a guest QR order, and a token screen. POS billing, UPI, WhatsApp, inventory, HR and attendance come later.
 
 ## People
 
@@ -26,7 +26,7 @@ Phase 1 delivers the platform itself: identity, restaurants, module grants, and 
 ## Phase map
 
 1. **Now.** Auth, restaurants, module switches, audit, this documentation.
-2. Menu, visual tables, booking, QR order, token display.
+2. **Now.** Menu, visual tables, booking, QR order, token display.
 3. POS billing, UPI QR for the guest, WhatsApp message to the owner.
 4. Inventory and recipe stock.
 5. HRMS and attendance.

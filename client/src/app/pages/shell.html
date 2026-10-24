@@ -8,9 +8,24 @@
     <nav>
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
       @if (auth.isSuperAdmin()) {
+        <label class="house-pick">
+          House
+          <select [ngModel]="desk.id() ?? ''" (ngModelChange)="pickHouse($event)" name="house">
+            <option value="">Choose</option>
+            @for (house of houses(); track house.id) {
+              <option [value]="house.id">{{ house.name }}</option>
+            }
+          </select>
+        </label>
         <a routerLink="/restaurants" routerLinkActive="active">Restaurants</a>
       } @else if (auth.user()?.restaurantId) {
         <a [routerLink]="['/restaurants', auth.user()!.restaurantId]" routerLinkActive="active">Your house</a>
+      }
+      @if (desk.has('MENU')) { <a routerLink="/menu" routerLinkActive="active">Menu</a> }
+      @if (desk.has('TABLES')) { <a routerLink="/floor" routerLinkActive="active">Floor</a> }
+      @if (desk.has('BOOKING')) { <a routerLink="/bookings" routerLinkActive="active">Bookings</a> }
+      @if (desk.has('TOKEN_DISPLAY') && desk.code()) {
+        <a [routerLink]="['/screen', desk.code()]">Token screen</a>
       }
       <a routerLink="/audit" routerLinkActive="active">Audit</a>
     </nav>

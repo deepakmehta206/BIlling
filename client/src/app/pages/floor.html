@@ -1,0 +1,101 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+    <p>The floor belongs to one restaurant.</p>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>The floor.</h1>
+    </div>
+    @if (desk.code()) {
+      <a class="btn solid" [routerLink]="['/screen', desk.code()]">Token screen</a>
+    }
+  </header>
+  @if (error()) { <p class="banner bad">{{ error() }}</p> }
+
+  <div class="floor-tools">
+    <form class="inline-add" (ngSubmit)="addTable()">
+      <input [ngModel]="tableName()" (ngModelChange)="tableName.set($event)" name="tableName" placeholder="T1" />
+      <input [ngModel]="section()" (ngModelChange)="section.set($event)" name="section" placeholder="Hall" />
+      <input type="number" min="1" [ngModel]="seats()" (ngModelChange)="seats.set(+$event)" name="seats" />
+      <button class="btn solid" type="submit">Add table</button>
+    </form>
+    <label>Show bookings at
+      <input type="datetime-local" [ngModel]="moment()" (ngModelChange)="showAt($event)" name="moment" />
+    </label>
+    <p class="legend"><span class="swatch available"></span> Empty <span class="swatch booked"></span> Booked <span class="swatch occupied"></span> Occupied <span class="swatch blocked"></span> Blocked</p>
+  </div>
+
+  <div class="floor-layout">
+    <div class="floor-room" #room>
+      @for (table of tables(); track table.id) {
+        <button
+          type="button"
+          class="table-chip"
+          [class.available]="tone(table) === 'available'"
+          [class.booked]="tone(table) === 'booked'"
+          [class.occupied]="tone(table) === 'occupied'"
+          [class.blocked]="tone(table) === 'blocked'"
+          [class.picked]="selected()?.id === table.id"
+          [style.left.%]="table.posX"
+          [style.top.%]="table.posY"
+          (pointerdown)="startDrag($event, table)"
+          (click)="pick(table)"
+        >
+          <strong>{{ table.name }}</strong>
+          <span>{{ table.capacity }} seats</span>
+          @if (table.openToken) { <em>#{{ table.openToken }}</em> }
+          @else if (table.booking) { <em>{{ table.booking.guestName }}</em> }
+        </button>
+      }
+    </div>
+
+    <aside class="panel floor-side">
+      @if (!selected()) {
+        <h2>Pick a table</h2>
+        <p class="muted">Drag a table to place it. Click it to book, block, or copy the guest QR.</p>
+      } @else {
+        <p class="eyebrow">{{ selected()!.section }}</p>
+        <h2>{{ selected()!.name }}</h2>
+        <p>{{ selected()!.capacity }} seats · {{ selected()!.status }}</p>
+        <p class="fine">QR {{ guestLink(selected()!) }}</p>
+        <div class="card-actions">
+          <button type="button" class="btn ghost tiny" (click)="saveSelected('Available')">Empty</button>
+          <button type="button" class="btn ghost tiny" (click)="saveSelected('Occupied')">Occupied</button>
+          <button type="button" class="btn ghost tiny" (click)="saveSelected('Blocked')">Block</button>
+          <button type="button" class="btn ghost tiny" (click)="archiveSelected()">Archive</button>
+        </div>
+        @if (selected()!.booking) {
+          <p>Booked by {{ selected()!.booking!.guestName }} until {{ selected()!.booking!.endsAt | date: 'h:mm a' }}.</p>
+        }
+        <form class="stack" (ngSubmit)="book()">
+          <h3>Book this table</h3>
+          <input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" placeholder="Guest name" />
+          <input [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="phone" placeholder="Phone" />
+          <input type="number" min="1" [ngModel]="guestCount()" (ngModelChange)="guestCount.set(+$event)" name="count" />
+          <button class="btn solid" type="submit">Book for 90 minutes</button>
+        </form>
+      }
+
+      <h3>Open tickets</h3>
+      @for (ticket of tickets(); track ticket.id) {
+        <article class="ticket-row">
+          <div>
+            <strong>#{{ ticket.tokenNumber }}</strong>
+            <span>{{ ticket.tableName }} · {{ ticket.status }}</span>
+          </div>
+          <div class="card-actions">
+            @if (ticket.status !== 'Ready') {
+              <button type="button" class="btn ghost tiny" (click)="mark(ticket, 'Ready')">Ready</button>
+            }
+            <button type="button" class="btn ghost tiny" (click)="mark(ticket, 'Served')">Served</button>
+          </div>
+        </article>
+      } @empty {
+        <p class="muted">No open tokens.</p>
+      }
+    </aside>
+  </div>
+}

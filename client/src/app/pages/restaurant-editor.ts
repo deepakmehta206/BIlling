@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { errorMessage } from '../core/http-error';
+import { HouseService } from '../core/house.service';
 import { ToastService } from '../core/toast.service';
 import { ModuleGrant, RestaurantDetail } from '../core/models';
 
@@ -19,6 +20,7 @@ export class RestaurantEditorPage {
   private readonly router = inject(Router);
   private readonly forms = inject(FormBuilder);
   private readonly toasts = inject(ToastService);
+  private readonly desk = inject(HouseService);
   readonly auth = inject(AuthService);
 
   readonly house = signal<RestaurantDetail | null>(null);
@@ -68,6 +70,18 @@ export class RestaurantEditorPage {
         error: (error) => this.error.set(errorMessage(error)),
       });
     });
+  }
+
+  runHouse() {
+    const house = this.house();
+    if (!house) return;
+    this.desk.select(
+      house.id,
+      house.name,
+      house.code,
+      house.modules.filter((module) => module.isEnabled).map((module) => module.code),
+    );
+    void this.router.navigateByUrl('/floor');
   }
 
   save() {

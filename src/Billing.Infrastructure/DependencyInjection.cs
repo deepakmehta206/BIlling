@@ -21,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<IRestaurantService, RestaurantService>();
         services.AddScoped<IAuditQueryService, AuditQueryService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<HouseAccess>();
+        services.AddScoped<IMenuService, MenuService>();
+        services.AddScoped<IFloorService, FloorService>();
         services.AddHostedService<DatabaseInitializer>();
         return services;
     }

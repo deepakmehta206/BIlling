@@ -1,4 +1,6 @@
 using System.Text;
+using Billing.Api.Http;
+using Billing.Api.Live;
 using Billing.Api.Security;
 using Billing.Application.Abstractions;
 using Billing.Infrastructure;
@@ -11,7 +13,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestContext, HttpRequestContext>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter()));
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IHouseLive, SignalRHouseLive>();
 builder.Services.AddOpenApi();
 
 var jwt = builder.Configuration.GetSection("Jwt");
@@ -79,4 +84,5 @@ app.UseCors("web");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<FloorHub>("/hubs/floor");
 app.Run();

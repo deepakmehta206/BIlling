@@ -1,20 +1,42 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Api } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
+import { HouseService } from '../core/house.service';
+import { RestaurantListItem } from '../core/models';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FormsModule],
   templateUrl: './shell.html',
 })
 export class ShellPage {
+  private readonly api = inject(Api);
   readonly auth = inject(AuthService);
+  readonly desk = inject(HouseService);
+  readonly houses = signal<RestaurantListItem[]>([]);
 
   constructor() {
     this.auth.hydrate();
+    effect(() => {
+      const user = this.auth.user();
+      if (!user) return;
+      this.desk.refresh();
+      if (user.isSuperAdmin) {
+        this.api.restaurants().subscribe((rows) => this.houses.set(rows));
+      }
+    });
   }
 
   roleLabel() {
     return this.auth.isSuperAdmin() ? 'Platform admin' : 'Restaurant admin';
+  }
+
+  pickHouse(id: string) {
+    const house = this.houses().find((row) => row.id === id);
+    if (!house) return;
+    this.desk.select(house.id, house.name, house.code, []);
+    this.desk.refresh();
   }
 }

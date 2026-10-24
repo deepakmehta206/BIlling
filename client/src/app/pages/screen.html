@@ -1,0 +1,38 @@
+<section class="screen-app">
+  @if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  } @else if (board(); as board) {
+    <header>
+      <p class="eyebrow">{{ board.restaurantName }}</p>
+      <h1>Tokens</h1>
+    </header>
+    <div class="screen-cols">
+      <section>
+        <h2>Preparing</h2>
+        <div class="token-wall">
+          @for (ticket of preparing(board.tickets); track ticket.id) {
+            <article>
+              <strong>{{ ticket.tokenNumber }}</strong>
+              <span>{{ ticket.tableName }}</span>
+            </article>
+          } @empty {
+            <p>Nothing on the pass.</p>
+          }
+        </div>
+      </section>
+      <section class="ready-col">
+        <h2>Ready</h2>
+        <div class="token-wall">
+          @for (ticket of ready(board.tickets); track ticket.id) {
+            <article>
+              <strong>{{ ticket.tokenNumber }}</strong>
+              <span>{{ ticket.tableName }}</span>
+            </article>
+          } @empty {
+            <p>No tokens ready.</p>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</section>

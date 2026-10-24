@@ -106,3 +106,116 @@ export interface Dashboard {
   modules: ModuleUsage[];
   recent: AuditEntry[];
 }
+
+export interface NamedPrice {
+  id?: string | null;
+  name: string;
+  price: number;
+}
+
+export interface MenuCategory {
+  id: string;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+  itemCount: number;
+}
+
+export interface MenuItem {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  description: string | null;
+  foodType: string;
+  price: number;
+  isAvailable: boolean;
+  sortOrder: number;
+  variants: NamedPrice[];
+  addons: NamedPrice[];
+}
+
+export interface MenuBoard {
+  categories: MenuCategory[];
+  items: MenuItem[];
+}
+
+export interface FloorTable {
+  id: string;
+  name: string;
+  section: string;
+  capacity: number;
+  posX: number;
+  posY: number;
+  status: string;
+  qrToken: string;
+  createdIp: string | null;
+  booking: { id: string; guestName: string; startsAt: string; endsAt: string } | null;
+  openToken: number | null;
+}
+
+export interface Booking {
+  id: string;
+  tableId: string;
+  tableName: string;
+  guestName: string;
+  guestPhone: string;
+  guestCount: number;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+  notes: string | null;
+}
+
+export interface TicketLine {
+  itemName: string;
+  variantName: string | null;
+  addonSummary: string | null;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface Ticket {
+  id: string;
+  tokenNumber: number;
+  status: string;
+  tableName: string | null;
+  guestName: string | null;
+  createdAt: string;
+  lines: TicketLine[];
+}
+
+export interface PublicDish {
+  id: string;
+  name: string;
+  description: string | null;
+  foodType: string;
+  price: number;
+  variants: NamedPrice[];
+  addons: NamedPrice[];
+}
+
+export interface PublicTable {
+  restaurantId: string;
+  restaurantName: string;
+  restaurantCode: string;
+  tableName: string;
+  menu: { name: string; items: PublicDish[] }[];
+}
+
+export interface PublicOrder {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  tableName: string | null;
+  tokenNumber: number;
+  status: string;
+  lines: TicketLine[];
+}
+
+export interface TokenBoard {
+  restaurantId: string;
+  restaurantName: string;
+  code: string;
+  tickets: Ticket[];
+}

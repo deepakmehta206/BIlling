@@ -61,3 +61,12 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 3. Turn Inventory off or on and check Audit. The row includes your IP.
 4. Sign out. Sign in as the restaurant admin you just created. The house is visible and the module switches are locked.
 5. Archive the house as super admin. It leaves the list. In SQL Server the row remains with `IsDeleted = 1`.
+
+## Phase 2 walk-through
+
+1. Open a restaurant and choose **Run this house**. The sidebar switches to that house.
+2. Add a menu category and a dish. Variants and add-ons are optional.
+3. On Floor, add a table and drag it. Green is empty, amber is booked, red has an open token, grey is blocked.
+4. Book the table for 90 minutes, or use Bookings for the day's list.
+5. Open the table's guest link (`/t/{qrToken}`) on a phone. Place an order. The token number appears.
+6. Open `/screen/{restaurantCode}` on a TV. Mark the ticket Ready from the floor panel. The screen moves the number.

@@ -29,6 +29,21 @@ If any code path calls a hard delete, `SaveChanges` converts it to `IsDeleted = 
 
 `AuditLogs` is also soft-delete capable, but the product does not expose a delete for it. The IP for an audit row is `CreatedIp`. The API returns that value as `ipAddress`.
 
+## Tables in phase 2
+
+| Table | Holds |
+| --- | --- |
+| MenuCategories | Section of the menu, sort order, active flag |
+| MenuItems | Dish, food type, price, availability |
+| ItemVariants | Size or portion and its price |
+| ItemAddons | Extra and its price |
+| DiningTables | Name, section, seats, floor position, status, QR token |
+| TableBookings | Guest, party size, start and end, status |
+| GuestOrders | Token number for one India service date, table snapshot, status |
+| OrderLines | Item, variant and addon snapshot, quantity, unit price |
+
+A token number is unique per restaurant and service date among live rows. A table name and a QR token are unique among live rows of that house. Prices are stored as decimal (10,2). Guest orders stamp the guest name as the actor email when nobody is signed in.
+
 ## Seed
 
 On startup the API applies migrations and inserts roles, modules, and the super admin if that email is missing. Restarting does not reset the super admin password.

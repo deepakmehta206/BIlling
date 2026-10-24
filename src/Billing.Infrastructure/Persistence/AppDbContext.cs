@@ -15,6 +15,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, IRequestContex
     public DbSet<AppModule> Modules => Set<AppModule>();
     public DbSet<RestaurantModule> RestaurantModules => Set<RestaurantModule>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<MenuCategory> MenuCategories => Set<MenuCategory>();
+    public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+    public DbSet<ItemVariant> ItemVariants => Set<ItemVariant>();
+    public DbSet<ItemAddon> ItemAddons => Set<ItemAddon>();
+    public DbSet<DiningTable> DiningTables => Set<DiningTable>();
+    public DbSet<TableBooking> TableBookings => Set<TableBooking>();
+    public DbSet<GuestOrder> GuestOrders => Set<GuestOrder>();
+    public DbSet<OrderLine> OrderLines => Set<OrderLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

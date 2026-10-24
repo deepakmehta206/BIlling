@@ -1,0 +1,69 @@
+<section class="guest-app">
+  @if (order(); as ticket) {
+    <div class="guest-token">
+      <p class="eyebrow">{{ ticket.restaurantName }} · {{ ticket.tableName }}</p>
+      <h1>{{ ticket.tokenNumber }}</h1>
+      <p class="status-pill">{{ ticket.status }}</p>
+      <ul>
+        @for (line of ticket.lines; track $index) {
+          <li>{{ line.quantity }} × {{ line.itemName }} {{ line.variantName }}</li>
+        }
+      </ul>
+      <p>We'll move this number to Ready when the kitchen is done.</p>
+    </div>
+  } @else if (table(); as house) {
+    <header class="guest-head">
+      <p class="eyebrow">{{ house.restaurantName }}</p>
+      <h1>Table {{ house.tableName }}</h1>
+      <p>Order from your seat. You'll get a token number.</p>
+    </header>
+    @if (error()) { <p class="banner bad">{{ error() }}</p> }
+    @for (category of house.menu; track category.name) {
+      <section>
+        <h2>{{ category.name }}</h2>
+        @for (item of category.items; track item.id) {
+          <article class="guest-dish">
+            <div class="dish-top">
+              <span class="dot" [class.veg]="item.foodType === 'Veg'" [class.egg]="item.foodType === 'Egg'" [class.nonveg]="item.foodType === 'NonVeg'"></span>
+              <strong>{{ item.name }}</strong>
+              <em>{{ item.price | currency: 'INR' : 'symbol' : '1.0-0' }}</em>
+            </div>
+            @if (item.description) { <p>{{ item.description }}</p> }
+            @if (item.variants.length) {
+              <div class="choice-row">
+                @for (variant of item.variants; track variant.id) {
+                  <button type="button" class="chip" [class.on]="choice(item).variantId === variant.id" (click)="pickVariant(item, variant.id || '')">
+                    {{ variant.name }} {{ variant.price | currency: 'INR' : 'symbol' : '1.0-0' }}
+                  </button>
+                }
+              </div>
+            }
+            @if (item.addons.length) {
+              <div class="choice-row">
+                @for (addon of item.addons; track addon.id) {
+                  <button type="button" class="chip" [class.on]="choice(item).addonIds.includes(addon.id || '')" (click)="toggleAddon(item, addon.id || '')">
+                    {{ addon.name }} +{{ addon.price }}
+                  </button>
+                }
+              </div>
+            }
+            <button type="button" class="btn solid" (click)="add(item)">Add</button>
+          </article>
+        }
+      </section>
+    }
+    @if (cart().length) {
+      <form class="guest-cart" (ngSubmit)="place()">
+        @for (line of cart(); track line.key) {
+          <p>{{ line.quantity }} × {{ line.name }} · {{ line.unit * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+        }
+        <input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" placeholder="Your name, optional" />
+        <button class="btn solid" type="submit">Place order · {{ total() | currency: 'INR' : 'symbol' : '1.0-0' }}</button>
+      </form>
+    }
+  } @else if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  } @else {
+    <p class="muted">Opening the table…</p>
+  }
+</section>

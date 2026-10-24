@@ -6,6 +6,9 @@
   @if (auth.isSuperAdmin()) {
     <a class="btn ghost" routerLink="/restaurants">All restaurants</a>
   }
+  @if (!isNew() && house()) {
+    <button type="button" class="btn solid" (click)="runHouse()">Run this house</button>
+  }
 </header>
 
 @if (error()) {

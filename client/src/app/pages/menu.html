@@ -1,0 +1,123 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+    <p>Open a restaurant and choose Run this house. The menu belongs to that house.</p>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>The menu.</h1>
+    </div>
+  </header>
+  @if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  }
+
+  <section class="split">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Categories</h2>
+      </div>
+      <form class="inline-add" (ngSubmit)="addCategory()">
+        <input [ngModel]="categoryName()" (ngModelChange)="categoryName.set($event)" name="category" placeholder="Starters" />
+        <button class="btn solid" type="submit">Add</button>
+      </form>
+      <ul class="module-list">
+        @for (category of board()?.categories ?? []; track category.id) {
+          <li>
+            <div>
+              <strong>{{ category.name }}</strong>
+              <span>{{ category.itemCount }} dishes</span>
+            </div>
+            <button type="button" class="btn ghost tiny" (click)="removeCategory(category.id)">Archive</button>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <form class="panel" (ngSubmit)="saveItem()">
+      <div class="panel-head">
+        <h2>{{ editing().id ? 'Edit dish' : 'New dish' }}</h2>
+        @if (editing().id) {
+          <button type="button" class="btn ghost tiny" (click)="reset()">Clear</button>
+        }
+      </div>
+      <div class="fields">
+        <label>Category
+          <select [ngModel]="editing().categoryId" (ngModelChange)="editing.set({ ...editing(), categoryId: $event })" name="categoryId">
+            @for (category of board()?.categories ?? []; track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </label>
+        <label>Name
+          <input [ngModel]="editing().name" (ngModelChange)="editing.set({ ...editing(), name: $event })" name="name" />
+        </label>
+        <label>Price
+          <input type="number" min="0" [ngModel]="editing().price" (ngModelChange)="editing.set({ ...editing(), price: +$event })" name="price" />
+        </label>
+        <label>Type
+          <select [ngModel]="editing().foodType" (ngModelChange)="editing.set({ ...editing(), foodType: $event })" name="food">
+            <option>Veg</option>
+            <option>NonVeg</option>
+            <option>Egg</option>
+          </select>
+        </label>
+        <label class="wide">Description
+          <input [ngModel]="editing().description" (ngModelChange)="editing.set({ ...editing(), description: $event })" name="description" />
+        </label>
+        <label class="check">
+          <input type="checkbox" [ngModel]="editing().isAvailable" (ngModelChange)="editing.set({ ...editing(), isAvailable: $event })" name="available" />
+          Available to order
+        </label>
+      </div>
+      <div class="pair-rows">
+        <div>
+          <strong>Sizes</strong>
+          @for (row of editing().variants; track $index) {
+            <div class="inline-add">
+              <input [ngModel]="row.name" (ngModelChange)="row.name = $event" [name]="'vname' + $index" placeholder="Half" />
+              <input type="number" [ngModel]="row.price" (ngModelChange)="row.price = +$event" [name]="'vprice' + $index" />
+            </div>
+          }
+          <button type="button" class="btn ghost tiny" (click)="addRow('variants')">Add size</button>
+        </div>
+        <div>
+          <strong>Add-ons</strong>
+          @for (row of editing().addons; track $index) {
+            <div class="inline-add">
+              <input [ngModel]="row.name" (ngModelChange)="row.name = $event" [name]="'aname' + $index" placeholder="Extra cheese" />
+              <input type="number" [ngModel]="row.price" (ngModelChange)="row.price = +$event" [name]="'aprice' + $index" />
+            </div>
+          }
+          <button type="button" class="btn ghost tiny" (click)="addRow('addons')">Add extra</button>
+        </div>
+      </div>
+      <button class="btn solid" type="submit">Save dish</button>
+    </form>
+  </section>
+
+  @for (category of board()?.categories ?? []; track category.id) {
+    <section class="dish-grid">
+      <h2>{{ category.name }}</h2>
+      @for (item of itemsFor(category.id); track item.id) {
+        <article class="dish-card" [class.muted-card]="!item.isAvailable">
+          <div class="dish-top">
+            <span class="dot" [class.veg]="item.foodType === 'Veg'" [class.egg]="item.foodType === 'Egg'" [class.nonveg]="item.foodType === 'NonVeg'"></span>
+            <strong>{{ item.name }}</strong>
+            <em>{{ item.price | currency: 'INR' : 'symbol' : '1.0-0' }}</em>
+          </div>
+          @if (item.description) { <p>{{ item.description }}</p> }
+          @if (item.variants.length) {
+            <p class="fine">{{ sizeLine(item) }}</p>
+          }
+          <div class="card-actions">
+            <button type="button" class="btn ghost tiny" (click)="edit(item)">Edit</button>
+            <button type="button" class="btn ghost tiny" (click)="removeItem(item.id)">Archive</button>
+          </div>
+        </article>
+      }
+    </section>
+  }
+}
