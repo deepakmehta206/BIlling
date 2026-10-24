@@ -92,3 +92,12 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 3. Request leave and approve it. The house admin and HR can open this desk. Other roles cannot.
 4. Open Attendance. Add a same-day shift, assign it, and check the person in. A check-in after the start plus grace is marked late.
 5. Audit shows `staff.hired`, `staff.leave_decided`, and `attendance.checked_in` with the IP.
+
+## Phase 6 walk-through
+
+The web app on port 4200 stays the browser. The other two shells load the same screens.
+
+1. With the API and `npm start` already running, from `client` run `npm run desktop`. Electron opens the desk. Sign in as usual. The API is still `http://localhost:5254`.
+2. `npm run mobile:sync` builds the web app and copies it into the Android project at `client/android`.
+3. Open that project in Android Studio, or run it on a phone. On the sign-in screen, set Server to this computer's address, for example `http://192.168.1.20:5254`. The phone and the computer must be on the same network. `localhost` on the phone is the phone itself.
+4. A built counter without the dev server uses `npm run desktop:pack` after `npm run build`. It serves the build at `http://127.0.0.1:4210`.

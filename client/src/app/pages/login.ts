@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { errorMessage } from '../core/http-error';
+import { apiOrigin, setApiOrigin } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +17,8 @@ export class LoginPage {
 
   readonly error = signal<string | null>(null);
   readonly busy = signal(false);
+  readonly wrapped = signal(shellKind() !== 'web');
+  readonly server = signal(apiOrigin());
   readonly form = this.forms.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
@@ -24,6 +27,11 @@ export class LoginPage {
   submit() {
     if (this.form.invalid || this.busy()) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    if (this.wrapped() && !setApiOrigin(this.server())) {
+      this.error.set('The server address must start with http:// or https://.');
       return;
     }
 
@@ -40,4 +48,16 @@ export class LoginPage {
       },
     });
   }
+
+  onServer(event: Event) {
+    this.server.set((event.target as HTMLInputElement).value);
+  }
+}
+
+function shellKind(): 'desktop' | 'mobile' | 'web' {
+  const desktop = (window as Window & { aanganShell?: string }).aanganShell === 'desktop';
+  if (desktop) return 'desktop';
+
+  const native = (window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  return native?.isNativePlatform?.() ? 'mobile' : 'web';
 }

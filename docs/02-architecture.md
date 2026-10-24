@@ -4,13 +4,15 @@
 
 ```
 client/          Angular 22 web app
+client/electron  Electron shell for the counter
+client/android   Capacitor Android project
 src/Billing.Api  ASP.NET Core 10 HTTP API
 src/Billing.Application  contracts and DTOs
 src/Billing.Domain       entities and role/module catalogues
 src/Billing.Infrastructure  EF Core, SQL Server, seeding
 ```
 
-The Angular app is the single UI. Later, Electron wraps it for the billing counter and Capacitor wraps it for phones. They will call this same API. The same build rules live in `.cursor/rules/aangan.mdc`.
+The Angular app is the single UI. Electron and Capacitor load that build and call this API. On the counter, the API is `http://localhost:5254`. On a phone, the sign-in screen can point at the computer's address, such as `http://192.168.1.20:5254`. The same build rules live in `.cursor/rules/aangan.mdc`.
 
 ## Request path
 

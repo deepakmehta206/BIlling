@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Aangan
 
-ASP.NET Core 10 API in `src/`, Angular 22 in `client/`. SQL Server only. One web UI; Electron and Capacitor come later and must call this API.
+ASP.NET Core 10 API in `src/`, Angular 22 in `client/`. SQL Server only. One web UI. Electron (`client/electron`) and Capacitor (`client/capacitor.config.ts`, Android under `client/android`) wrap that UI and call this API.
 
 ## Data
 

@@ -20,6 +20,12 @@
   <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
     <p class="eyebrow">Sign in</p>
     <h2>Welcome back to the desk.</h2>
+    @if (wrapped()) {
+      <label>
+        Server
+        <input [value]="server()" (input)="onServer($event)" autocomplete="off" placeholder="http://192.168.1.20:5254" />
+      </label>
+    }
     <label>
       Email
       <input type="email" formControlName="email" autocomplete="username" placeholder="you@house.com" />
