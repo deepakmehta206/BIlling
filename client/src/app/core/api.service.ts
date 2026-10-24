@@ -2,14 +2,17 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import {
+  BillingDesk,
   Booking,
   Dashboard,
   FloorTable,
+  HouseBill,
   MenuBoard,
   MenuCategory,
   MenuItem,
   ModuleGrant,
   PagedAudit,
+  PublicBill,
   PublicOrder,
   PublicTable,
   RestaurantDetail,
@@ -133,5 +136,21 @@ export class Api {
 
   tokenBoard(code: string) {
     return this.http.get<TokenBoard>(`${this.base}/public/board/${code}`);
+  }
+
+  billingDesk(restaurantId: string) {
+    return this.http.get<BillingDesk>(`${this.base}/bills`, { params: this.house(restaurantId) });
+  }
+
+  createBill(restaurantId: string, body: unknown) {
+    return this.http.post<HouseBill>(`${this.base}/bills`, body, { params: this.house(restaurantId) });
+  }
+
+  markBillPaid(restaurantId: string, id: string) {
+    return this.http.post<HouseBill>(`${this.base}/bills/${id}/paid`, {}, { params: this.house(restaurantId) });
+  }
+
+  publicBill(id: string) {
+    return this.http.get<PublicBill>(`${this.base}/public/bills/${id}`);
   }
 }

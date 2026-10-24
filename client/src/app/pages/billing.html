@@ -1,0 +1,94 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>The bill.</h1>
+    </div>
+  </header>
+  @if (error()) { <p class="banner bad">{{ error() }}</p> }
+
+  <section class="split">
+    <div class="panel">
+      <h2>Open tokens</h2>
+      <ul class="ledger">
+        @for (ticket of board()?.tickets ?? []; track ticket.orderId) {
+          <li>
+            <div class="ledger-main">
+              <span class="code">#{{ ticket.tokenNumber }}</span>
+              <strong>{{ ticket.tableName || 'Counter' }} · {{ ticket.guestName || 'Guest' }}</strong>
+              <span>{{ ticket.status }} · {{ ticket.subtotal | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+            </div>
+            <button type="button" class="btn ghost tiny" (click)="pick(ticket)">Bill</button>
+          </li>
+        } @empty {
+          <li><p class="muted">No open tokens.</p></li>
+        }
+      </ul>
+    </div>
+
+    <div class="panel">
+      @if (picked(); as ticket) {
+        <h2>Token #{{ ticket.tokenNumber }}</h2>
+        <ul class="plain">
+          @for (line of ticket.lines; track $index) {
+            <li>{{ line.quantity }} × {{ line.itemName }} {{ line.variantName }} · {{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</li>
+          }
+        </ul>
+        <form class="stack" (ngSubmit)="cut()">
+          <label>GST
+            <select [ngModel]="gst()" (ngModelChange)="gst.set(+$event)" name="gst">
+              <option [ngValue]="0">0%</option>
+              <option [ngValue]="5">5%</option>
+              <option [ngValue]="12">12%</option>
+              <option [ngValue]="18">18%</option>
+            </select>
+          </label>
+          <label>Discount<input type="number" min="0" [ngModel]="discount()" (ngModelChange)="discount.set(+$event)" name="discount" /></label>
+          <div class="choice-row">
+            <button type="button" class="chip" [class.on]="mode() === 'Upi'" (click)="mode.set('Upi')">UPI</button>
+            <button type="button" class="chip" [class.on]="mode() === 'Cash'" (click)="mode.set('Cash')">Cash</button>
+          </div>
+          <button class="btn solid" type="submit">Cut bill · {{ preview() | currency: 'INR' : 'symbol' : '1.0-0' }}</button>
+        </form>
+      } @else if (latest(); as bill) {
+        <p class="eyebrow">Bill {{ bill.billNumber }} · {{ bill.status }}</p>
+        <h2>{{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</h2>
+        <p>{{ bill.tableName }} · {{ bill.guestName }} · GST {{ bill.gstPercent }}%</p>
+        @if (qr(bill); as src) {
+          <img class="upi-qr" [src]="src" alt="UPI QR" />
+          <p class="fine"><a [href]="payLink(bill)">Guest pay page</a></p>
+        }
+        @if (bill.whatsAppUrl) {
+          <a class="btn solid" [href]="bill.whatsAppUrl" target="_blank" rel="noopener">Send to owner on WhatsApp</a>
+        } @else if (bill.whatsAppStatus === 'Skipped') {
+          <p class="muted">WhatsApp is on, but the owner phone is missing.</p>
+        }
+        @if (bill.status === 'Unpaid') {
+          <button type="button" class="btn ghost" (click)="paid(bill)">Mark paid</button>
+        }
+      } @else {
+        <h2>Today's bills</h2>
+        <ul class="ledger">
+          @for (bill of board()?.bills ?? []; track bill.id) {
+            <li>
+              <div class="ledger-main">
+                <span class="code">{{ bill.billNumber }}</span>
+                <strong>{{ bill.guestName || 'Guest' }} · {{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
+                <span>{{ bill.paymentMode }} · {{ bill.status }}</span>
+              </div>
+              @if (bill.status === 'Unpaid') {
+                <button type="button" class="btn ghost tiny" (click)="paid(bill)">Paid</button>
+              }
+            </li>
+          } @empty {
+            <li><p class="muted">No bills yet today.</p></li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+}

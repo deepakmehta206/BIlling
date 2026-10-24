@@ -70,3 +70,10 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 4. Book the table for 90 minutes, or use Bookings for the day's list.
 5. Open the table's guest link (`/t/{qrToken}`) on a phone. Place an order. The token number appears.
 6. Open `/screen/{restaurantCode}` on a TV. Mark the ticket Ready from the floor panel. The screen moves the number.
+
+## Phase 3 walk-through
+
+1. On the house, turn **UPI QR** and **WhatsApp** on. The house needs a UPI id and an owner phone.
+2. Open Billing. Choose an open token, keep GST at 5%, and cut a UPI bill.
+3. The guest pay page shows the amount and the QR. The WhatsApp link opens a message for the owner.
+4. Mark the bill paid. The pay page moves to Paid, and Audit shows `bill.created` and `bill.paid` with the IP.

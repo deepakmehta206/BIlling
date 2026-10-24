@@ -1,0 +1,34 @@
+---
+description: How Aangan is built — layers, audit, modules, money, and UI
+alwaysApply: true
+---
+
+# Aangan
+
+ASP.NET Core 10 API in `src/`, Angular 22 in `client/`. SQL Server only. One web UI; Electron and Capacitor come later and must call this API.
+
+## Data
+
+- Business rows extend `AuditableEntity`. `SaveChanges` stamps user and IP and turns a hard delete into `IsDeleted`. Do not add a purge.
+- Unique indexes use filter `[IsDeleted] = 0`. Guid keys stay client-generated. Do not set `ValueGeneratedNever`.
+- Audit with `AuditEntries.Create`. Guest actions use the guest name, or `guest`, as the actor email.
+- Store instants as UTC. `IndiaClock` owns the India service date. JSON dates go through `UtcDateTimeJsonConverter`.
+
+## Access
+
+- Super admin must pass `restaurantId`. Any other user is forced to the restaurant on the token.
+- Gate a desk with `HouseAccess` and `ModuleCodes`. A restaurant admin cannot grant modules.
+- The server computes prices, tax, and totals. The client only displays them.
+- After a floor or bill write, call `IHouseLive.Changed`.
+
+## UI and docs
+
+- Angular pages are standalone, use signals, and put CSS in `client/src/styles.scss`. No component style files.
+- Keep the charcoal, cream, and saffron look (Fraunces + Outfit). Public guest routes stay outside the shell.
+- A new desk needs a domain entity, EF config, application contract, infrastructure service, API route, an Angular page behind `desk.has('CODE')`, a migration, and a note in `docs/`.
+
+```csharp
+var house = await access.RequireBilling(restaurantId, cancellationToken);
+if (!house.Succeeded || house.Value is null)
+    return ServiceResult<BillDto>.Fail(house.StatusCode, house.Error ?? "Cannot open billing.");
+```

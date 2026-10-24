@@ -44,6 +44,16 @@ If any code path calls a hard delete, `SaveChanges` converts it to `IsDeleted = 
 
 A token number is unique per restaurant and service date among live rows. A table name and a QR token are unique among live rows of that house. Prices are stored as decimal (10,2). Guest orders stamp the guest name as the actor email when nobody is signed in.
 
+## Tables in phase 3
+
+| Table | Holds |
+| --- | --- |
+| Bills | Bill number for one India service date, tax, discount, total, cash or UPI, status |
+| BillLines | Dish snapshot copied from the token |
+| OwnerNotices | WhatsApp text prepared for the owner, and the `wa.me` link |
+
+A bill number is unique per restaurant and service date among live rows. A live token can have only one bill that is not cancelled.
+
 ## Seed
 
 On startup the API applies migrations and inserts roles, modules, and the super admin if that email is missing. Restarting does not reset the super admin password.

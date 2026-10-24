@@ -23,6 +23,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, IRequestContex
     public DbSet<TableBooking> TableBookings => Set<TableBooking>();
     public DbSet<GuestOrder> GuestOrders => Set<GuestOrder>();
     public DbSet<OrderLine> OrderLines => Set<OrderLine>();
+    public DbSet<Bill> Bills => Set<Bill>();
+    public DbSet<BillLine> BillLines => Set<BillLine>();
+    public DbSet<OwnerNotice> OwnerNotices => Set<OwnerNotice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<HouseAccess>();
         services.AddScoped<IMenuService, MenuService>();
         services.AddScoped<IFloorService, FloorService>();
+        services.AddScoped<IBillingService, BillingService>();
         services.AddHostedService<DatabaseInitializer>();
         return services;
     }

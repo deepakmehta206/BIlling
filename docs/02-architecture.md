@@ -10,7 +10,7 @@ src/Billing.Domain       entities and role/module catalogues
 src/Billing.Infrastructure  EF Core, SQL Server, seeding
 ```
 
-The Angular app is the single UI. Later, Electron wraps it for the billing counter and Capacitor wraps it for phones. They will call this same API. Phase 1 ships the web app only.
+The Angular app is the single UI. Later, Electron wraps it for the billing counter and Capacitor wraps it for phones. They will call this same API. The same build rules live in `.cursor/rules/aangan.mdc`.
 
 ## Request path
 

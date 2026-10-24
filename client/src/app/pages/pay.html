@@ -1,0 +1,23 @@
+<section class="guest-app pay-app">
+  @if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  } @else if (bill(); as bill) {
+    <p class="eyebrow">{{ bill.restaurantName }}</p>
+    <h1>{{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</h1>
+    <p>Bill {{ bill.billNumber }} · {{ bill.tableName }} · {{ bill.guestName }}</p>
+    <p class="status-pill">{{ bill.status }}</p>
+    <ul>
+      @for (line of bill.lines; track $index) {
+        <li>{{ line.quantity }} × {{ line.itemName }} {{ line.variantName }}</li>
+      }
+    </ul>
+    @if (qr(bill); as src) {
+      <img class="upi-qr" [src]="src" alt="Scan to pay with UPI" />
+      <p>Scan this QR in any UPI app.</p>
+    } @else if (bill.status !== 'Paid') {
+      <p>Pay at the counter.</p>
+    }
+  } @else {
+    <p class="muted">Opening the bill…</p>
+  }
+</section>

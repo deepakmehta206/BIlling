@@ -21,6 +21,12 @@ public class HouseAccess(AppDbContext db, Application.Abstractions.IRequestConte
     public Task<ServiceResult<HouseScope>> RequireTickets(Guid? restaurantId, CancellationToken cancellationToken) =>
         RequireAny(restaurantId, [ModuleCodes.TokenDisplay, ModuleCodes.QrOrder], cancellationToken);
 
+    public Task<ServiceResult<HouseScope>> RequireBilling(Guid? restaurantId, CancellationToken cancellationToken) =>
+        Require(restaurantId, ModuleCodes.Billing, cancellationToken);
+
+    public Task<bool> IsOn(Guid restaurantId, string module, CancellationToken cancellationToken) =>
+        ModuleOn(restaurantId, module, cancellationToken);
+
     public async Task<ServiceResult<HouseScope>> RequirePublic(Guid restaurantId, string module, CancellationToken cancellationToken)
     {
         var restaurant = await db.Restaurants

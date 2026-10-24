@@ -219,3 +219,59 @@ export interface TokenBoard {
   code: string;
   tickets: Ticket[];
 }
+
+export interface BillLine {
+  itemName: string;
+  variantName: string | null;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface OpenTicket {
+  orderId: string;
+  tokenNumber: number;
+  status: string;
+  tableName: string | null;
+  guestName: string | null;
+  subtotal: number;
+  lines: BillLine[];
+}
+
+export interface HouseBill {
+  id: string;
+  restaurantId: string;
+  billNumber: number;
+  tableName: string | null;
+  guestName: string | null;
+  subtotal: number;
+  gstPercent: number;
+  gstAmount: number;
+  discount: number;
+  total: number;
+  status: string;
+  paymentMode: string;
+  upiUri: string | null;
+  qrPng: string | null;
+  whatsAppStatus: string | null;
+  whatsAppUrl: string | null;
+  lines: BillLine[];
+}
+
+export interface BillingDesk {
+  tickets: OpenTicket[];
+  bills: HouseBill[];
+}
+
+export interface PublicBill {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  billNumber: number;
+  tableName: string | null;
+  guestName: string | null;
+  total: number;
+  status: string;
+  upiUri: string | null;
+  qrPng: string | null;
+  lines: BillLine[];
+}
