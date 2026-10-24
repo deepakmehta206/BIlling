@@ -213,6 +213,7 @@ input:focus {
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow: hidden;
 }
 
 .side-kicker {
@@ -223,7 +224,14 @@ input:focus {
   text-transform: uppercase;
 }
 
-.sidebar nav { display: grid; gap: 6px; }
+.sidebar nav {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 
 .sidebar nav a {
   text-decoration: none;
@@ -240,6 +248,7 @@ input:focus {
 
 .side-user {
   margin-top: auto;
+  flex-shrink: 0;
   display: grid;
   gap: 4px;
   padding-top: 16px;
@@ -447,7 +456,8 @@ input:focus {
 @media (max-width: 980px) {
   .login, .shell, .split, .stats, .fields { grid-template-columns: 1fr; }
   .login-story { padding: 32px 24px; }
-  .sidebar { position: relative; height: auto; }
+  .sidebar { position: relative; height: auto; overflow: visible; }
+  .sidebar nav { flex: none; min-height: auto; overflow: visible; }
   .shell { grid-template-columns: 1fr; }
   .stage { padding: 24px 16px 48px; }
   .page-head { align-items: start; flex-direction: column; }
@@ -571,6 +581,7 @@ select, .house-pick select {
 
 .plain { list-style: none; padding: 0; display: grid; gap: 6px; }
 .upi-qr { width: 240px; height: 240px; background: white; padding: 12px; border-radius: 18px; }
+.guest-token .upi-qr, .panel .upi-qr { margin: 8px auto; display: block; }
 .pay-app { text-align: center; }
 .pay-app h1 { font-size: 4.5rem; line-height: 0.9; }
 .pay-app .upi-qr { margin: 12px auto; display: block; }

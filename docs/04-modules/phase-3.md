@@ -10,7 +10,7 @@ The counter. Billing must be on. UPI and WhatsApp are separate switches, off unt
 | UPI | Cash needs nothing extra. UPI needs this module and a UPI id on the house. The guest opens `/pay/{billId}` and scans the QR. |
 | WHATSAPP | Prepares a message for the owner phone and a `https://wa.me` link. The counter sends it from WhatsApp. No Business API key is stored. |
 
-A bill copies the token's dish names and prices. The server calculates GST and the total. Cash is marked Paid at once. UPI stays Unpaid until staff press Mark paid. Cutting the bill marks the token Served and frees the table when no other open token remains. Print opens the browser dialog for a slip: house, bill number, lines, GST, discount, total, and the UPI QR when that bill was just cut. Today's list can print the same slip again.
+A bill copies the token's dish names and prices. The server calculates GST and the total. The guest token shows a UPI QR for subtotal plus 5% GST, and that same QR is stored on the bill. Pressing Paid cuts the bill as soon as payment is received: the token is Served, the table is freed when no other open token remains, stock is consumed, and the owner WhatsApp is prepared. Cash still cuts a paid bill from the form, with the GST and discount the counter chooses. An unpaid UPI bill can still be marked paid later. Print opens an 80mm slip with the house, lines, GST, discount, total, and the payment QR. Today's list prints that same slip.
 
 Bill numbers start at 1 each India service date. One live token has one bill that is not cancelled.
 

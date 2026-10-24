@@ -74,9 +74,9 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 ## Phase 3 walk-through
 
 1. On the house, turn **UPI QR** and **WhatsApp** on. The house needs a UPI id and an owner phone.
-2. Open Billing. Choose an open token, keep GST at 5%, and cut a UPI bill.
-3. The guest pay page shows the amount and the QR. The WhatsApp link opens a message for the owner.
-4. Mark the bill paid. The pay page moves to Paid, and Audit shows `bill.created` and `bill.paid` with the IP.
+2. Place a guest order. The token shows the payment QR. The same QR is on the bill.
+3. On Billing, press Paid on that token. The bill is cut, the WhatsApp link opens a message for the owner, and Print includes the QR.
+4. Audit shows `bill.created` and `bill.paid` with the IP.
 
 ## Phase 4 walk-through
 

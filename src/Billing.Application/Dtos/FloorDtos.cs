@@ -147,6 +147,11 @@ public sealed record PublicOrderDto(
     string? TableName,
     int TokenNumber,
     string Status,
-    IReadOnlyList<TicketLineDto> Lines);
+    IReadOnlyList<TicketLineDto> Lines,
+    Guid? BillId,
+    int? BillNumber,
+    decimal? Payable,
+    string? PaymentStatus,
+    string? QrPng);
 
 public sealed record TokenBoardDto(Guid RestaurantId, string RestaurantName, string Code, IReadOnlyList<TicketDto> Tickets);

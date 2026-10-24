@@ -41,12 +41,14 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             .OrderBy(item => item.TokenNumber)
             .ToListAsync(cancellationToken);
 
-        var tickets = orders
-            .Where(item => !billed.Contains(item.Id))
-            .Select(MapTicket)
-            .ToList();
+        var tickets = new List<OpenTicketDto>();
+        foreach (var order in orders.Where(item => !billed.Contains(item.Id)))
+        {
+            var payment = await PaymentForAsync(order, cancellationToken);
+            tickets.Add(MapTicket(order, payment));
+        }
 
-        return ServiceResult<BillingDeskDto>.Ok(new BillingDeskDto(tickets, bills.Select(item => MapBill(item, includeQr: false)).ToList()));
+        return ServiceResult<BillingDeskDto>.Ok(new BillingDeskDto(tickets, bills.Select(item => MapBill(item, includeQr: true)).ToList()));
     }
 
     public async Task<ServiceResult<BillDto>> CreateAsync(Guid? restaurantId, CreateBillRequest body, CancellationToken cancellationToken)
@@ -103,8 +105,9 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             .MaxAsync(item => (int?)item.BillNumber, cancellationToken) ?? 0) + 1;
 
         if (mode == PaymentModes.Upi)
-            upiUri = BuildUpi(restaurant.UpiId!, restaurant.Name, total, number);
+            upiUri = BuildUpi(restaurant.UpiId!, restaurant.Name, total, $"Token {order.TokenNumber}");
 
+        var paidNow = mode == PaymentModes.Cash || body.Received;
         var bill = new Bill
         {
             Id = Guid.NewGuid(),
@@ -119,7 +122,7 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             GstAmount = gst,
             Discount = body.Discount,
             Total = total,
-            Status = mode == PaymentModes.Cash ? BillStatuses.Paid : BillStatuses.Unpaid,
+            Status = paidNow ? BillStatuses.Paid : BillStatuses.Unpaid,
             PaymentMode = mode,
             UpiUri = upiUri,
         };
@@ -137,15 +140,15 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             });
         }
 
-        order.Status = OrderStatuses.Served;
-        if (order.DiningTableId is Guid tableId)
-            await ReleaseTable(tableId, order.Id, cancellationToken);
-
-        var notice = await PrepareNotice(restaurant, bill, SafeOrigin(body.PublicOrigin), cancellationToken);
         db.Bills.Add(bill);
-        if (notice is not null)
-            db.OwnerNotices.Add(notice);
-        await stock.ConsumeAsync(house.Value.Id, house.Value.Name, bill, order.Lines.ToList(), cancellationToken);
+        OwnerNotice? notice = null;
+        if (paidNow)
+        {
+            await FinishService(bill, order, restaurant.Name, cancellationToken);
+            notice = await PrepareNotice(restaurant, bill, SafeOrigin(body.PublicOrigin), cancellationToken);
+            if (notice is not null)
+                db.OwnerNotices.Add(notice);
+        }
 
         db.AuditLogs.Add(AuditEntries.Create(
             request,
@@ -155,6 +158,17 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             $"Bill {bill.BillNumber} for {bill.Total:0.00} by {mode}.",
             house.Value.Id,
             house.Value.Name));
+        if (paidNow && mode == PaymentModes.Upi)
+        {
+            db.AuditLogs.Add(AuditEntries.Create(
+                request,
+                "bill.paid",
+                "Bill",
+                bill.Id.ToString(),
+                $"Bill {bill.BillNumber} cut when payment was received.",
+                house.Value.Id,
+                house.Value.Name));
+        }
 
         await db.SaveChangesAsync(cancellationToken);
         await live.Changed(house.Value.Id, cancellationToken);
@@ -181,6 +195,15 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
 
         bill.Status = BillStatuses.Paid;
         var restaurant = await db.Restaurants.FirstAsync(item => item.Id == house.Value.Id, cancellationToken);
+        if (bill.GuestOrderId is Guid orderId)
+        {
+            var order = await db.GuestOrders
+                .Include(item => item.Lines)
+                .FirstOrDefaultAsync(item => item.Id == orderId && item.RestaurantId == house.Value.Id, cancellationToken);
+            if (order is not null)
+                await FinishService(bill, order, restaurant.Name, cancellationToken);
+        }
+
         var notice = await PrepareNotice(restaurant, bill, payUrl: null, cancellationToken);
         if (notice is not null)
         {
@@ -230,6 +253,45 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             bill.Lines.Select(MapLine).ToList()));
     }
 
+    public async Task<GuestPaymentDto?> PaymentForAsync(GuestOrder order, CancellationToken cancellationToken)
+    {
+        if (!await access.IsOn(order.RestaurantId, ModuleCodes.Billing, cancellationToken))
+            return null;
+        if (!await access.IsOn(order.RestaurantId, ModuleCodes.Upi, cancellationToken))
+            return null;
+
+        var restaurant = await db.Restaurants.FirstAsync(item => item.Id == order.RestaurantId, cancellationToken);
+        if (!InputRules.ValidUpi(restaurant.UpiId) || string.IsNullOrWhiteSpace(restaurant.UpiId))
+            return null;
+
+        var bill = await db.Bills
+            .Where(item => item.GuestOrderId == order.Id && item.Status != BillStatuses.Cancelled)
+            .OrderByDescending(item => item.BillNumber)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (bill is not null)
+        {
+            return bill.UpiUri is null
+                ? null
+                : new GuestPaymentDto(bill.Id, bill.BillNumber, bill.Total, bill.Status, QrPng(bill.UpiUri));
+        }
+
+        var subtotal = order.Lines.Sum(line => line.UnitPrice * line.Quantity);
+        var total = subtotal + decimal.Round(subtotal * 5m / 100m, 2, MidpointRounding.AwayFromZero);
+        var uri = BuildUpi(restaurant.UpiId, restaurant.Name, total, $"Token {order.TokenNumber}");
+        return new GuestPaymentDto(null, null, total, BillStatuses.Unpaid, QrPng(uri));
+    }
+
+    private async Task FinishService(Bill bill, GuestOrder order, string houseName, CancellationToken cancellationToken)
+    {
+        if (order.Status is OrderStatuses.Preparing or OrderStatuses.Ready)
+            order.Status = OrderStatuses.Served;
+
+        if (order.DiningTableId is Guid tableId)
+            await ReleaseTable(tableId, order.Id, cancellationToken);
+
+        await stock.ConsumeAsync(bill.RestaurantId, houseName, bill, order.Lines.ToList(), cancellationToken);
+    }
+
     private async Task ReleaseTable(Guid tableId, Guid orderId, CancellationToken cancellationToken)
     {
         var stillOpen = await db.GuestOrders.AnyAsync(
@@ -272,10 +334,20 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
         };
     }
 
-    private static OpenTicketDto MapTicket(GuestOrder order)
+    private static OpenTicketDto MapTicket(GuestOrder order, GuestPaymentDto? payment)
     {
         var lines = order.Lines.Select(line => new BillLineDto(line.ItemName, line.VariantName, line.Quantity, line.UnitPrice)).ToList();
-        return new OpenTicketDto(order.Id, order.TokenNumber, order.Status, order.TableName, order.GuestName, lines.Sum(line => line.UnitPrice * line.Quantity), lines);
+        var subtotal = lines.Sum(line => line.UnitPrice * line.Quantity);
+        return new OpenTicketDto(
+            order.Id,
+            order.TokenNumber,
+            order.Status,
+            order.TableName,
+            order.GuestName,
+            subtotal,
+            lines,
+            payment?.QrPng,
+            payment?.Total ?? subtotal);
     }
 
     private static BillDto MapBill(Bill bill, bool includeQr)
@@ -313,8 +385,8 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
         return text.Length <= 1000 ? text : text[..1000];
     }
 
-    private static string BuildUpi(string upi, string name, decimal total, int number) =>
-        $"upi://pay?pa={Uri.EscapeDataString(upi.Trim())}&pn={Uri.EscapeDataString(name)}&am={total.ToString("0.00", CultureInfo.InvariantCulture)}&cu=INR&tn={Uri.EscapeDataString($"Bill {number}")}";
+    private static string BuildUpi(string upi, string name, decimal total, string note) =>
+        $"upi://pay?pa={Uri.EscapeDataString(upi.Trim())}&pn={Uri.EscapeDataString(name)}&am={total.ToString("0.00", CultureInfo.InvariantCulture)}&cu=INR&tn={Uri.EscapeDataString(note)}";
 
     private static string? SafeOrigin(string? origin)
     {

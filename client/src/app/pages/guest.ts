@@ -106,6 +106,10 @@ export class GuestPage {
     return this.cart().reduce((sum, line) => sum + line.unit * line.quantity, 0);
   }
 
+  pay(ticket: PublicOrder) {
+    return ticket.qrPng ? `data:image/png;base64,${ticket.qrPng}` : null;
+  }
+
   place() {
     if (!this.cart().length) return;
     this.api

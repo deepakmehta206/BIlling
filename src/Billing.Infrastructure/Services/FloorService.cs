@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Billing.Infrastructure.Services;
 
-public class FloorService(AppDbContext db, IRequestContext request, HouseAccess access, IHouseLive live) : IFloorService
+public class FloorService(AppDbContext db, IRequestContext request, HouseAccess access, IHouseLive live, IBillingService billing) : IFloorService
 {
     public async Task<ServiceResult<IReadOnlyList<TableDto>>> GetTablesAsync(Guid? restaurantId, DateTime? at, CancellationToken cancellationToken)
     {
@@ -364,7 +364,8 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
         await db.SaveChangesAsync(cancellationToken);
         await live.Changed(table.RestaurantId, cancellationToken);
         order.Lines = lines;
-        return ServiceResult<PublicOrderDto>.Ok(MapPublic(order, house.Value.Name));
+        var payment = await billing.PaymentForAsync(order, cancellationToken);
+        return ServiceResult<PublicOrderDto>.Ok(MapPublic(order, house.Value.Name, payment));
     }
 
     public async Task<ServiceResult<PublicOrderDto>> GetPublicOrderAsync(Guid orderId, CancellationToken cancellationToken)
@@ -374,7 +375,8 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             return ServiceResult<PublicOrderDto>.Fail(404, "Order not found.");
 
         var name = await db.Restaurants.Where(item => item.Id == order.RestaurantId).Select(item => item.Name).FirstAsync(cancellationToken);
-        return ServiceResult<PublicOrderDto>.Ok(MapPublic(order, name));
+        var payment = await billing.PaymentForAsync(order, cancellationToken);
+        return ServiceResult<PublicOrderDto>.Ok(MapPublic(order, name, payment));
     }
 
     public async Task<ServiceResult<TokenBoardDto>> GetPublicBoardAsync(string restaurantCode, CancellationToken cancellationToken)
@@ -446,7 +448,7 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             order.CreatedAt,
             order.Lines.Select(line => new TicketLineDto(line.ItemName, line.VariantName, line.AddonSummary, line.Quantity, line.UnitPrice)).ToList());
 
-    private static PublicOrderDto MapPublic(GuestOrder order, string restaurantName) =>
+    private static PublicOrderDto MapPublic(GuestOrder order, string restaurantName, GuestPaymentDto? payment) =>
         new(
             order.Id,
             order.RestaurantId,
@@ -454,7 +456,12 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             order.TableName,
             order.TokenNumber,
             order.Status,
-            order.Lines.Select(line => new TicketLineDto(line.ItemName, line.VariantName, line.AddonSummary, line.Quantity, line.UnitPrice)).ToList());
+            order.Lines.Select(line => new TicketLineDto(line.ItemName, line.VariantName, line.AddonSummary, line.Quantity, line.UnitPrice)).ToList(),
+            payment?.BillId,
+            payment?.BillNumber,
+            payment?.Total,
+            payment?.Status,
+            payment?.QrPng);
 }
 
 public static class IndiaClock

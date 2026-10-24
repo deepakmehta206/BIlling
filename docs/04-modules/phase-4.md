@@ -12,7 +12,7 @@ The kitchen store. The Inventory module must be on. It starts off until the supe
 | ml, L | Volume |
 | pcs | Count |
 
-A recipe quantity is for one plate, in that ingredient's unit. There is no conversion between g and kg. A bill deducts `recipe quantity × plates`. If Inventory is off, the bill does not touch stock. If it is on and the dish has no recipe, nothing is deducted. On hand may fall below zero so a guest is never refused for an empty bin. A low row is one whose on hand is at or under the reorder level.
+A recipe quantity is for one plate, in that ingredient's unit. There is no conversion between g and kg. A paid bill deducts `recipe quantity × plates`. Cash deducts when the bill is cut. UPI deducts when payment is received and the bill is cut. If Inventory is off, the bill does not touch stock. If it is on and the dish has no recipe, nothing is deducted. On hand may fall below zero so a guest is never refused for an empty bin. A low row is one whose on hand is at or under the reorder level.
 
 Archiving an ingredient is a soft delete and removes its recipe lines. Purchases and sale movements stay.
 

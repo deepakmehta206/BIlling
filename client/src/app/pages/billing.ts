@@ -90,6 +90,29 @@ export class BillingPage {
       });
   }
 
+  receive(ticket: OpenTicket) {
+    const id = this.desk.activeId();
+    if (!id) return;
+    this.api
+      .createBill(id, {
+        orderId: ticket.orderId,
+        paymentMode: 'Upi',
+        gstPercent: 5,
+        discount: 0,
+        received: true,
+        publicOrigin: location.origin,
+      })
+      .subscribe({
+        next: (bill) => {
+          this.latest.set(bill);
+          this.picked.set(null);
+          this.toasts.show(`Bill ${bill.billNumber} cut. Payment received.`);
+          this.load();
+        },
+        error: (error) => this.error.set(errorMessage(error)),
+      });
+  }
+
   paid(bill: HouseBill) {
     const id = this.desk.activeId();
     if (!id) return;
@@ -105,6 +128,10 @@ export class BillingPage {
 
   qr(bill: HouseBill) {
     return bill.qrPng ? `data:image/png;base64,${bill.qrPng}` : null;
+  }
+
+  qrTicket(ticket: OpenTicket) {
+    return ticket.qrPng ? `data:image/png;base64,${ticket.qrPng}` : null;
   }
 
   payLink(bill: HouseBill) {

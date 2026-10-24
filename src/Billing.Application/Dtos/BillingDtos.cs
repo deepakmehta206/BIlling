@@ -9,7 +9,16 @@ public sealed record OpenTicketDto(
     string? TableName,
     string? GuestName,
     decimal Subtotal,
-    IReadOnlyList<BillLineDto> Lines);
+    IReadOnlyList<BillLineDto> Lines,
+    string? QrPng,
+    decimal Payable);
+
+public sealed record GuestPaymentDto(
+    Guid? BillId,
+    int? BillNumber,
+    decimal Total,
+    string Status,
+    string QrPng);
 
 public sealed record BillDto(
     Guid Id,
@@ -38,6 +47,7 @@ public sealed class CreateBillRequest
     public string PaymentMode { get; set; } = "Cash";
     public decimal GstPercent { get; set; } = 5;
     public decimal Discount { get; set; }
+    public bool Received { get; set; }
     public string? PublicOrigin { get; set; }
 }
 

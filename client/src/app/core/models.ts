@@ -211,6 +211,11 @@ export interface PublicOrder {
   tokenNumber: number;
   status: string;
   lines: TicketLine[];
+  billId: string | null;
+  billNumber: number | null;
+  payable: number | null;
+  paymentStatus: string | null;
+  qrPng: string | null;
 }
 
 export interface TokenBoard {
@@ -235,6 +240,8 @@ export interface OpenTicket {
   guestName: string | null;
   subtotal: number;
   lines: BillLine[];
+  qrPng: string | null;
+  payable: number;
 }
 
 export interface HouseBill {

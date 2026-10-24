@@ -9,6 +9,14 @@
           <li>{{ line.quantity }} × {{ line.itemName }} {{ line.variantName }}</li>
         }
       </ul>
+      @if (pay(ticket); as src) {
+        <img class="upi-qr" [src]="src" alt="UPI QR" />
+        @if (ticket.billNumber) {
+          <p>Bill {{ ticket.billNumber }} · {{ ticket.paymentStatus }} · {{ ticket.payable | currency: 'INR' : 'symbol' : '1.2-2' }}</p>
+        } @else {
+          <p>Pay {{ ticket.payable | currency: 'INR' : 'symbol' : '1.2-2' }}. The bill is cut when payment is received.</p>
+        }
+      }
       <p>We'll move this number to Ready when the kitchen is done.</p>
     </div>
   } @else if (table(); as house) {

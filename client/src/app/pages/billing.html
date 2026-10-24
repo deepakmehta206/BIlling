@@ -20,9 +20,14 @@
             <div class="ledger-main">
               <span class="code">#{{ ticket.tokenNumber }}</span>
               <strong>{{ ticket.tableName || 'Counter' }} · {{ ticket.guestName || 'Guest' }}</strong>
-              <span>{{ ticket.status }} · {{ ticket.subtotal | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+              <span>{{ ticket.status }} · {{ ticket.payable | currency: 'INR' : 'symbol' : '1.2-2' }}</span>
             </div>
-            <button type="button" class="btn ghost tiny" (click)="pick(ticket)">Bill</button>
+            <div class="card-actions">
+              @if (ticket.qrPng) {
+                <button type="button" class="btn solid tiny" (click)="receive(ticket)">Paid</button>
+              }
+              <button type="button" class="btn ghost tiny" (click)="pick(ticket)">Bill</button>
+            </div>
           </li>
         } @empty {
           <li><p class="muted">No open tokens.</p></li>
@@ -33,9 +38,13 @@
     <div class="panel">
       @if (picked(); as ticket) {
         <h2>Token #{{ ticket.tokenNumber }}</h2>
+        @if (qrTicket(ticket); as src) {
+          <img class="upi-qr" [src]="src" alt="UPI QR" />
+          <p class="fine">This QR stays on the bill. Payment cuts it.</p>
+        }
         <ul class="plain">
           @for (line of ticket.lines; track $index) {
-            <li>{{ line.quantity }} × {{ line.itemName }} {{ line.variantName }} · {{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</li>
+            <li>{{ line.quantity }} × {{ line.itemName }} {{ line.variantName }} · {{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.2-2' }}</li>
           }
         </ul>
         <form class="stack" (ngSubmit)="cut()">
@@ -52,11 +61,14 @@
             <button type="button" class="chip" [class.on]="mode() === 'Upi'" (click)="mode.set('Upi')">UPI</button>
             <button type="button" class="chip" [class.on]="mode() === 'Cash'" (click)="mode.set('Cash')">Cash</button>
           </div>
-          <button class="btn solid" type="submit">Cut bill · {{ preview() | currency: 'INR' : 'symbol' : '1.0-0' }}</button>
+          @if (ticket.qrPng) {
+            <button type="button" class="btn solid" (click)="receive(ticket)">Payment received · {{ ticket.payable | currency: 'INR' : 'symbol' : '1.2-2' }}</button>
+          }
+          <button class="btn ghost" type="submit">Cut bill · {{ preview() | currency: 'INR' : 'symbol' : '1.2-2' }}</button>
         </form>
       } @else if (latest(); as bill) {
         <p class="eyebrow">Bill {{ bill.billNumber }} · {{ bill.status }}</p>
-        <h2>{{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</h2>
+        <h2>{{ bill.total | currency: 'INR' : 'symbol' : '1.2-2' }}</h2>
         <p>{{ bill.tableName }} · {{ bill.guestName }} · GST {{ bill.gstPercent }}%</p>
         @if (qr(bill); as src) {
           <img class="upi-qr" [src]="src" alt="UPI QR" />
@@ -80,7 +92,7 @@
             <li>
               <div class="ledger-main">
                 <span class="code">{{ bill.billNumber }}</span>
-                <strong>{{ bill.guestName || 'Guest' }} · {{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
+                <strong>{{ bill.guestName || 'Guest' }} · {{ bill.total | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
                 <span>{{ bill.paymentMode }} · {{ bill.status }}</span>
               </div>
               <div class="card-actions">
@@ -108,16 +120,16 @@
         @for (line of bill.lines; track $index) {
           <li>
             <span>{{ line.quantity }} × {{ line.itemName }}{{ line.variantName ? ' ' + line.variantName : '' }}</span>
-            <strong>{{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
+            <strong>{{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
           </li>
         }
       </ul>
-      <p><span>Subtotal</span><strong>{{ bill.subtotal | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
-      <p><span>GST {{ bill.gstPercent }}%</span><strong>{{ bill.gstAmount | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+      <p><span>Subtotal</span><strong>{{ bill.subtotal | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></p>
+      <p><span>GST {{ bill.gstPercent }}%</span><strong>{{ bill.gstAmount | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></p>
       @if (bill.discount > 0) {
-        <p><span>Discount</span><strong>{{ bill.discount | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+        <p><span>Discount</span><strong>{{ bill.discount | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></p>
       }
-      <p class="slip-total"><span>Total</span><strong>{{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+      <p class="slip-total"><span>Total</span><strong>{{ bill.total | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></p>
       <p>{{ bill.paymentMode }} · {{ bill.status }}</p>
       @if (qr(bill); as src) {
         <img [src]="src" alt="UPI QR" />
