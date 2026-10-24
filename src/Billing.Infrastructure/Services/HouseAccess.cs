@@ -24,6 +24,28 @@ public class HouseAccess(AppDbContext db, Application.Abstractions.IRequestConte
     public Task<ServiceResult<HouseScope>> RequireBilling(Guid? restaurantId, CancellationToken cancellationToken) =>
         Require(restaurantId, ModuleCodes.Billing, cancellationToken);
 
+    public Task<ServiceResult<HouseScope>> RequireInventory(Guid? restaurantId, CancellationToken cancellationToken) =>
+        Require(restaurantId, ModuleCodes.Inventory, cancellationToken);
+
+    public Task<ServiceResult<HouseScope>> RequireHrms(Guid? restaurantId, CancellationToken cancellationToken) =>
+        Require(restaurantId, ModuleCodes.Hrms, cancellationToken);
+
+    public Task<ServiceResult<HouseScope>> RequireAttendance(Guid? restaurantId, CancellationToken cancellationToken) =>
+        Require(restaurantId, ModuleCodes.Attendance, cancellationToken);
+
+    public Task<bool> CanManageStaff(CancellationToken cancellationToken)
+    {
+        if (request.IsSuperAdmin)
+            return Task.FromResult(true);
+
+        if (request.UserId is not Guid id)
+            return Task.FromResult(false);
+
+        return db.UserRoles.AnyAsync(
+            link => link.UserId == id && (link.Role.Name == RoleNames.RestaurantAdmin || link.Role.Name == RoleNames.Hr),
+            cancellationToken);
+    }
+
     public Task<bool> IsOn(Guid restaurantId, string module, CancellationToken cancellationToken) =>
         ModuleOn(restaurantId, module, cancellationToken);
 

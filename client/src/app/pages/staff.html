@@ -1,0 +1,103 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>The staff book.</h1>
+    </div>
+  </header>
+  @if (error()) { <p class="banner bad">{{ error() }}</p> }
+
+  <section class="split">
+    <div class="panel">
+      <h2>People</h2>
+      <form class="stack" (ngSubmit)="hire()">
+        <input [ngModel]="name()" (ngModelChange)="name.set($event)" name="name" placeholder="Full name" />
+        <input [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" placeholder="Email" />
+        <input [ngModel]="phone()" (ngModelChange)="phone.set($event)" name="phone" placeholder="Phone" />
+        <select [ngModel]="role()" (ngModelChange)="role.set($event)" name="role">
+          @for (role of board()?.roles ?? []; track role) {
+            <option [value]="role">{{ role }}</option>
+          }
+        </select>
+        <input type="password" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" placeholder="Password" />
+        <button class="btn solid" type="submit">Hire</button>
+      </form>
+      <ul class="ledger">
+        @for (person of board()?.employees ?? []; track person.id) {
+          <li>
+            <button type="button" class="ledger-main linkish" (click)="edit(person)">
+              <strong>{{ person.fullName }}</strong>
+              <span>{{ person.role }} · {{ person.email }}{{ person.shiftName ? ' · ' + person.shiftName : '' }}</span>
+            </button>
+            @if (person.role !== 'RestaurantAdmin') {
+              <button type="button" class="btn ghost tiny" (click)="archive(person)">Archive</button>
+            }
+          </li>
+        } @empty {
+          <li><p class="muted">No one is on the book yet.</p></li>
+        }
+      </ul>
+
+      @if (editing(); as person) {
+        <h3>{{ person.fullName }}</h3>
+        <form class="stack" (ngSubmit)="saveEdit()">
+          <input [ngModel]="editName()" (ngModelChange)="editName.set($event)" name="editName" />
+          <input [ngModel]="editPhone()" (ngModelChange)="editPhone.set($event)" name="editPhone" placeholder="Phone" />
+          <select [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" name="editRole">
+            @for (role of board()?.roles ?? []; track role) {
+              <option [value]="role">{{ role }}</option>
+            }
+          </select>
+          <label class="choice-row">
+            <input type="checkbox" [ngModel]="editActive()" (ngModelChange)="editActive.set($event)" name="active" />
+            Active login
+          </label>
+          <input type="password" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" name="editPassword" placeholder="New password, optional" />
+          <button class="btn solid" type="submit">Save</button>
+        </form>
+      }
+    </div>
+
+    <div class="panel">
+      <h2>Leave</h2>
+      <form class="stack" (ngSubmit)="askLeave()">
+        <select [ngModel]="leaveUser()" (ngModelChange)="leaveUser.set($event)" name="leaveUser">
+          @for (person of board()?.employees ?? []; track person.id) {
+            <option [value]="person.id">{{ person.fullName }}</option>
+          }
+        </select>
+        <select [ngModel]="kind()" (ngModelChange)="kind.set($event)" name="kind">
+          <option value="Casual">Casual</option>
+          <option value="Sick">Sick</option>
+          <option value="Unpaid">Unpaid</option>
+        </select>
+        <input type="date" [ngModel]="from()" (ngModelChange)="from.set($event)" name="from" />
+        <input type="date" [ngModel]="to()" (ngModelChange)="to.set($event)" name="to" />
+        <input [ngModel]="note()" (ngModelChange)="note.set($event)" name="note" placeholder="Note, optional" />
+        <button class="btn solid" type="submit">Request leave</button>
+      </form>
+      <ul class="ledger">
+        @for (leave of board()?.leaves ?? []; track leave.id) {
+          <li>
+            <div class="ledger-main">
+              <strong>{{ leave.employeeName }} · {{ leave.kind }}</strong>
+              <span>{{ leave.from }} to {{ leave.to }} · {{ leave.status }}</span>
+            </div>
+            @if (leave.status === 'Pending') {
+              <div class="card-actions">
+                <button type="button" class="btn solid tiny" (click)="decide(leave.id, 'Approved')">Approve</button>
+                <button type="button" class="btn ghost tiny" (click)="decide(leave.id, 'Rejected')">Reject</button>
+              </div>
+            }
+          </li>
+        } @empty {
+          <li><p class="muted">No leave on the book.</p></li>
+        }
+      </ul>
+    </div>
+  </section>
+}

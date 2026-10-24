@@ -6,7 +6,7 @@ What this product is, and who holds the keys.
 
 Aangan is a multi-restaurant billing platform. One company (the platform) hosts many restaurants. Each restaurant has its own admin, and later its own menu, floor, bills, stock and staff.
 
-Phase 1 is the platform: identity, restaurants, module grants, and an audit trail. Phase 2 is the dining room: menu, a visual floor, table booking, a guest QR order, and a token screen. Phase 3 is the counter: the bill, a UPI QR for the guest, and a WhatsApp message for the owner. Inventory, HR and attendance come later.
+Phase 1 is the platform: identity, restaurants, module grants, and an audit trail. Phase 2 is the dining room: menu, a visual floor, table booking, a guest QR order, and a token screen. Phase 3 is the counter: the bill, a UPI QR for the guest, and a WhatsApp message for the owner. Phase 4 is the store: ingredients, purchases, and the recipe a bill consumes. Phase 5 is the staff book: employees, leave, shifts, and attendance. Electron and Capacitor come later.
 
 ## People
 
@@ -28,6 +28,6 @@ Phase 1 is the platform: identity, restaurants, module grants, and an audit trai
 1. **Now.** Auth, restaurants, module switches, audit, this documentation.
 2. **Now.** Menu, visual tables, booking, QR order, token display.
 3. **Now.** POS billing, UPI QR for the guest, WhatsApp message to the owner.
-4. Inventory and recipe stock.
-5. HRMS and attendance.
+4. **Now.** Inventory and recipe stock.
+5. **Now.** HRMS and attendance.
 6. Electron desktop and Capacitor mobile from the same Angular app.

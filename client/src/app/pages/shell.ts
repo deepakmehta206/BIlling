@@ -30,7 +30,25 @@ export class ShellPage {
   }
 
   roleLabel() {
-    return this.auth.isSuperAdmin() ? 'Platform admin' : 'Restaurant admin';
+    const user = this.auth.user();
+    if (!user) return '';
+    if (user.isSuperAdmin) return 'Platform admin';
+    const labels: Record<string, string> = {
+      RestaurantAdmin: 'Restaurant admin',
+      Manager: 'Manager',
+      Cashier: 'Cashier',
+      Waiter: 'Waiter',
+      Kitchen: 'Kitchen',
+      StoreKeeper: 'Store keeper',
+      Hr: 'HR',
+    };
+    return labels[user.roles[0]] ?? 'House';
+  }
+
+  canStaff() {
+    const user = this.auth.user();
+    if (!user) return false;
+    return user.isSuperAdmin || user.roles.includes('RestaurantAdmin') || user.roles.includes('Hr');
   }
 
   pickHouse(id: string) {

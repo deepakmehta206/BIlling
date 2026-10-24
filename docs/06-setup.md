@@ -77,3 +77,18 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 2. Open Billing. Choose an open token, keep GST at 5%, and cut a UPI bill.
 3. The guest pay page shows the amount and the QR. The WhatsApp link opens a message for the owner.
 4. Mark the bill paid. The pay page moves to Paid, and Audit shows `bill.created` and `bill.paid` with the IP.
+
+## Phase 4 walk-through
+
+1. Turn **Inventory** on for the house, then open Store.
+2. Add an ingredient, set a reorder level, and receive a purchase.
+3. On a dish, save a recipe. Quantity is per plate.
+4. Cut a bill for that dish. The ingredient's on-hand falls by the recipe amount, and Audit shows `inventory.consumed`.
+
+## Phase 5 walk-through
+
+1. Turn **HRMS** and **Attendance** on for the house.
+2. Open Staff. Hire someone with a house role and a password. They can sign in to that house.
+3. Request leave and approve it. The house admin and HR can open this desk. Other roles cannot.
+4. Open Attendance. Add a same-day shift, assign it, and check the person in. A check-in after the start plus grace is marked late.
+5. Audit shows `staff.hired`, `staff.leave_decided`, and `attendance.checked_in` with the IP.

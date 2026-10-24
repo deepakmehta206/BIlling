@@ -6,6 +6,8 @@ import { BookingsPage } from './pages/bookings';
 import { DashboardPage } from './pages/dashboard';
 import { FloorPage } from './pages/floor';
 import { GuestPage } from './pages/guest';
+import { AttendancePage } from './pages/attendance';
+import { InventoryPage } from './pages/inventory';
 import { LoginPage } from './pages/login';
 import { MenuPage } from './pages/menu';
 import { PayPage } from './pages/pay';
@@ -13,6 +15,7 @@ import { RestaurantEditorPage } from './pages/restaurant-editor';
 import { RestaurantListPage } from './pages/restaurant-list';
 import { TokenScreenPage } from './pages/screen';
 import { ShellPage } from './pages/shell';
+import { StaffPage } from './pages/staff';
 
 export const routes: Routes = [
   { path: 'login', component: LoginPage, canActivate: [guestGuard] },
@@ -31,6 +34,9 @@ export const routes: Routes = [
       { path: 'menu', component: MenuPage },
       { path: 'floor', component: FloorPage },
       { path: 'billing', component: BillingPage },
+      { path: 'inventory', component: InventoryPage },
+      { path: 'staff', component: StaffPage },
+      { path: 'attendance', component: AttendancePage },
       { path: 'bookings', component: BookingsPage },
       { path: 'audit', component: AuditPage },
     ],

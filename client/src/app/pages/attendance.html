@@ -1,0 +1,73 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>Today's attendance.</h1>
+    </div>
+  </header>
+  @if (error()) { <p class="banner bad">{{ error() }}</p> }
+
+  <section class="split">
+    <div class="panel">
+      <h2>Who is in</h2>
+      <ul class="ledger">
+        @for (row of board()?.rows ?? []; track row.userId) {
+          <li [class.mark-late]="row.late">
+            <div class="ledger-main">
+              <strong>{{ row.fullName }}</strong>
+              <span>
+                {{ row.state }}
+                @if (row.shiftName) { · {{ row.shiftName }} }
+                @if (row.checkInAt) { · in {{ row.checkInAt | date: 'shortTime' }} }
+                @if (row.checkOutAt) { · out {{ row.checkOutAt | date: 'shortTime' }} }
+              </span>
+            </div>
+            @if (!row.checkInAt) {
+              <button type="button" class="btn solid tiny" (click)="punch(row.userId, 'in')">Check in</button>
+            } @else if (!row.checkOutAt) {
+              <button type="button" class="btn ghost tiny" (click)="punch(row.userId, 'out')">Check out</button>
+            }
+          </li>
+        } @empty {
+          <li><p class="muted">No active people for this house.</p></li>
+        }
+      </ul>
+    </div>
+
+    @if (board()?.canManage) {
+      <div class="panel">
+        <h2>Shifts</h2>
+        <form class="stack" (ngSubmit)="saveShift()">
+          <input [ngModel]="shiftName()" (ngModelChange)="shiftName.set($event)" name="shiftName" placeholder="Morning" />
+          <input type="time" [ngModel]="startsAt()" (ngModelChange)="startsAt.set($event)" name="starts" />
+          <input type="time" [ngModel]="endsAt()" (ngModelChange)="endsAt.set($event)" name="ends" />
+          <input type="number" min="0" max="90" [ngModel]="grace()" (ngModelChange)="grace.set(+$event)" name="grace" placeholder="Grace minutes" />
+          <button class="btn solid" type="submit">Add shift</button>
+        </form>
+        <ul class="plain">
+          @for (shift of board()?.shifts ?? []; track shift.id) {
+            <li>{{ shift.name }} · {{ shift.startsAt }}–{{ shift.endsAt }} · {{ shift.graceMinutes }} min grace</li>
+          }
+        </ul>
+        <h3>Assign</h3>
+        <form class="stack" (ngSubmit)="assign()">
+          <select [ngModel]="assignUser()" (ngModelChange)="assignUser.set($event)" name="person">
+            @for (row of board()?.rows ?? []; track row.userId) {
+              <option [value]="row.userId">{{ row.fullName }}</option>
+            }
+          </select>
+          <select [ngModel]="assignShift()" (ngModelChange)="assignShift.set($event)" name="shift">
+            @for (shift of board()?.shifts ?? []; track shift.id) {
+              <option [value]="shift.id">{{ shift.name }}</option>
+            }
+          </select>
+          <button class="btn solid" type="submit">Assign</button>
+        </form>
+      </div>
+    }
+  </section>
+}

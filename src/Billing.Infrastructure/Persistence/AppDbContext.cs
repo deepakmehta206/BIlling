@@ -26,6 +26,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, IRequestContex
     public DbSet<Bill> Bills => Set<Bill>();
     public DbSet<BillLine> BillLines => Set<BillLine>();
     public DbSet<OwnerNotice> OwnerNotices => Set<OwnerNotice>();
+    public DbSet<StockItem> StockItems => Set<StockItem>();
+    public DbSet<RecipeLine> RecipeLines => Set<RecipeLine>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<ShiftAssignment> ShiftAssignments => Set<ShiftAssignment>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<AttendanceMark> AttendanceMarks => Set<AttendanceMark>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

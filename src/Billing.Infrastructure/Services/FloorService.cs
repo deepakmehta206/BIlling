@@ -461,7 +461,16 @@ public static class IndiaClock
 {
     private static readonly TimeZoneInfo Zone = Load();
 
-    public static DateOnly Today() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zone));
+    public static DateOnly Today() => DateOnly.FromDateTime(LocalNow());
+
+    public static DateTime LocalNow() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zone);
+
+    public static bool ArrivedLate(TimeOnly startsAt, int graceMinutes, DateTime checkInUtc)
+    {
+        var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(checkInUtc, DateTimeKind.Utc), Zone);
+        var due = startsAt.Add(TimeSpan.FromMinutes(Math.Max(graceMinutes, 0)));
+        return TimeOnly.FromDateTime(local) > due;
+    }
 
     public static DateTime ToUtc(DateTime value) =>
         value.Kind == DateTimeKind.Utc

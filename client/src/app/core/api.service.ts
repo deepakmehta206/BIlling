@@ -5,8 +5,13 @@ import {
   BillingDesk,
   Booking,
   Dashboard,
+  DishRecipe,
+  Employee,
+  LeaveRow,
   FloorTable,
   HouseBill,
+  AttendanceDesk,
+  InventoryDesk,
   MenuBoard,
   MenuCategory,
   MenuItem,
@@ -14,9 +19,12 @@ import {
   PagedAudit,
   PublicBill,
   PublicOrder,
+  Shift,
+  StaffDesk,
   PublicTable,
   RestaurantDetail,
   RestaurantListItem,
+  StockItem,
   Ticket,
   TokenBoard,
 } from './models';
@@ -152,5 +160,69 @@ export class Api {
 
   publicBill(id: string) {
     return this.http.get<PublicBill>(`${this.base}/public/bills/${id}`);
+  }
+
+  inventory(restaurantId: string) {
+    return this.http.get<InventoryDesk>(`${this.base}/inventory`, { params: this.house(restaurantId) });
+  }
+
+  saveStockItem(restaurantId: string, body: unknown) {
+    return this.http.post<StockItem>(`${this.base}/inventory/items`, body, { params: this.house(restaurantId) });
+  }
+
+  deleteStockItem(restaurantId: string, id: string) {
+    return this.http.delete<{ message: string }>(`${this.base}/inventory/items/${id}`, { params: this.house(restaurantId) });
+  }
+
+  purchaseStock(restaurantId: string, body: unknown) {
+    return this.http.post<StockItem>(`${this.base}/inventory/purchases`, body, { params: this.house(restaurantId) });
+  }
+
+  saveRecipe(restaurantId: string, menuItemId: string, lines: { stockItemId: string; quantity: number }[]) {
+    return this.http.put<DishRecipe>(`${this.base}/inventory/recipes/${menuItemId}`, { lines }, { params: this.house(restaurantId) });
+  }
+
+  staff(restaurantId: string) {
+    return this.http.get<StaffDesk>(`${this.base}/staff`, { params: this.house(restaurantId) });
+  }
+
+  hire(restaurantId: string, body: unknown) {
+    return this.http.post<Employee>(`${this.base}/staff/employees`, body, { params: this.house(restaurantId) });
+  }
+
+  updateEmployee(restaurantId: string, id: string, body: unknown) {
+    return this.http.put<Employee>(`${this.base}/staff/employees/${id}`, body, { params: this.house(restaurantId) });
+  }
+
+  archiveEmployee(restaurantId: string, id: string) {
+    return this.http.delete<{ message: string }>(`${this.base}/staff/employees/${id}`, { params: this.house(restaurantId) });
+  }
+
+  requestLeave(restaurantId: string, body: unknown) {
+    return this.http.post<LeaveRow>(`${this.base}/staff/leave`, body, { params: this.house(restaurantId) });
+  }
+
+  decideLeave(restaurantId: string, id: string, status: string) {
+    return this.http.post<LeaveRow>(`${this.base}/staff/leave/${id}/decision`, { status }, { params: this.house(restaurantId) });
+  }
+
+  attendance(restaurantId: string) {
+    return this.http.get<AttendanceDesk>(`${this.base}/attendance`, { params: this.house(restaurantId) });
+  }
+
+  saveShift(restaurantId: string, body: unknown) {
+    return this.http.post<Shift>(`${this.base}/attendance/shifts`, body, { params: this.house(restaurantId) });
+  }
+
+  assignShift(restaurantId: string, userId: string, shiftId: string) {
+    return this.http.put<{ message: string }>(`${this.base}/attendance/assignments`, { userId, shiftId }, { params: this.house(restaurantId) });
+  }
+
+  checkIn(restaurantId: string, userId: string) {
+    return this.http.post<{ message: string }>(`${this.base}/attendance/in`, { userId }, { params: this.house(restaurantId) });
+  }
+
+  checkOut(restaurantId: string, userId: string) {
+    return this.http.post<{ message: string }>(`${this.base}/attendance/out`, { userId }, { params: this.house(restaurantId) });
   }
 }

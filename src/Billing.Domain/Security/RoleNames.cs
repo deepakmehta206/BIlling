@@ -11,6 +11,11 @@ public static class RoleNames
     public const string StoreKeeper = "StoreKeeper";
     public const string Hr = "Hr";
 
+    public static readonly IReadOnlyList<string> HouseStaff =
+    [
+        Manager, Cashier, Waiter, Kitchen, StoreKeeper, Hr
+    ];
+
     public static readonly IReadOnlyList<(string Name, string Description)> All =
     [
         (SuperAdmin, "Platform owner. Grants restaurants and modules."),

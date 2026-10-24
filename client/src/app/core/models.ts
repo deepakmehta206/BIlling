@@ -275,3 +275,95 @@ export interface PublicBill {
   qrPng: string | null;
   lines: BillLine[];
 }
+
+export interface StockItem {
+  id: string;
+  name: string;
+  unit: string;
+  onHand: number;
+  reorderLevel: number;
+  low: boolean;
+}
+
+export interface StockMovement {
+  id: string;
+  stockItemId: string;
+  itemName: string;
+  quantity: number;
+  unitCost: number | null;
+  reason: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface RecipeLine {
+  stockItemId: string;
+  stockItemName: string;
+  unit: string;
+  quantity: number;
+}
+
+export interface DishRecipe {
+  menuItemId: string;
+  menuItemName: string;
+  lines: RecipeLine[];
+}
+
+export interface InventoryDesk {
+  items: StockItem[];
+  movements: StockMovement[];
+  dishes: { id: string; name: string }[];
+  recipes: DishRecipe[];
+}
+
+export interface Employee {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  isActive: boolean;
+  shiftName: string | null;
+}
+
+export interface LeaveRow {
+  id: string;
+  userId: string;
+  employeeName: string;
+  kind: string;
+  from: string;
+  to: string;
+  status: string;
+  note: string | null;
+}
+
+export interface StaffDesk {
+  employees: Employee[];
+  leaves: LeaveRow[];
+  roles: string[];
+}
+
+export interface Shift {
+  id: string;
+  name: string;
+  startsAt: string;
+  endsAt: string;
+  graceMinutes: number;
+}
+
+export interface AttendanceRow {
+  userId: string;
+  fullName: string;
+  role: string;
+  shiftName: string | null;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  late: boolean;
+  state: string;
+}
+
+export interface AttendanceDesk {
+  shifts: Shift[];
+  rows: AttendanceRow[];
+  canManage: boolean;
+}

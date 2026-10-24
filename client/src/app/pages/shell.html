@@ -24,6 +24,9 @@
       @if (desk.has('MENU')) { <a routerLink="/menu" routerLinkActive="active">Menu</a> }
       @if (desk.has('TABLES')) { <a routerLink="/floor" routerLinkActive="active">Floor</a> }
       @if (desk.has('BILLING')) { <a routerLink="/billing" routerLinkActive="active">Billing</a> }
+      @if (desk.has('INVENTORY')) { <a routerLink="/inventory" routerLinkActive="active">Store</a> }
+      @if (desk.has('HRMS') && canStaff()) { <a routerLink="/staff" routerLinkActive="active">Staff</a> }
+      @if (desk.has('ATTENDANCE')) { <a routerLink="/attendance" routerLinkActive="active">Attendance</a> }
       @if (desk.has('BOOKING')) { <a routerLink="/bookings" routerLinkActive="active">Bookings</a> }
       @if (desk.has('TOKEN_DISPLAY') && desk.code()) {
         <a [routerLink]="['/screen', desk.code()]">Token screen</a>

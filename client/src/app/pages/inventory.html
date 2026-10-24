@@ -1,0 +1,84 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>The store.</h1>
+    </div>
+  </header>
+  @if (error()) { <p class="banner bad">{{ error() }}</p> }
+
+  <section class="split">
+    <div class="panel">
+      <h2>Ingredients</h2>
+      <form class="inline-add" (ngSubmit)="addItem()">
+        <input [ngModel]="name()" (ngModelChange)="name.set($event)" name="name" placeholder="Chicken" />
+        <select [ngModel]="unit()" (ngModelChange)="unit.set($event)" name="unit">
+          <option value="g">g</option>
+          <option value="kg">kg</option>
+          <option value="ml">ml</option>
+          <option value="L">L</option>
+          <option value="pcs">pcs</option>
+        </select>
+        <input type="number" min="0" [ngModel]="reorder()" (ngModelChange)="reorder.set(+$event)" name="reorder" placeholder="Reorder" />
+        <button class="btn solid" type="submit">Add</button>
+      </form>
+      <ul class="ledger">
+        @for (item of board()?.items ?? []; track item.id) {
+          <li [class.stock-low]="item.low">
+            <button type="button" class="ledger-main linkish" (click)="selectedId.set(item.id)">
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.onHand | number: '1.0-3' }} {{ item.unit }} · reorder {{ item.reorderLevel | number: '1.0-3' }}</span>
+            </button>
+            <button type="button" class="btn ghost tiny" (click)="archive(item)">Archive</button>
+          </li>
+        } @empty {
+          <li><p class="muted">The store is empty.</p></li>
+        }
+      </ul>
+
+      @if (selected(); as item) {
+        <h3>Receive {{ item.name }}</h3>
+        <form class="inline-add" (ngSubmit)="receive()">
+          <input type="number" min="0" step="0.001" [ngModel]="purchaseQty()" (ngModelChange)="purchaseQty.set(+$event)" name="qty" placeholder="Quantity" />
+          <input type="number" min="0" step="0.01" [ngModel]="purchaseCost()" (ngModelChange)="purchaseCost.set(+$event)" name="cost" placeholder="Cost" />
+          <button class="btn solid" type="submit">Receive</button>
+        </form>
+        <ul class="plain">
+          @for (row of movements(); track row.id) {
+            <li>{{ row.reason }} {{ row.quantity | number: '1.0-3' }} {{ row.note }}</li>
+          }
+        </ul>
+      }
+    </div>
+
+    <form class="panel stack" (ngSubmit)="saveRecipe()">
+      <h2>Recipe</h2>
+      <label>Dish
+        <select [ngModel]="dishId()" (ngModelChange)="useDish($event)" name="dish">
+          @for (dish of board()?.dishes ?? []; track dish.id) {
+            <option [value]="dish.id">{{ dish.name }}</option>
+          }
+        </select>
+      </label>
+      @for (row of recipe(); track $index) {
+        <div class="inline-add">
+          <select [(ngModel)]="row.stockItemId" [name]="'stock' + $index">
+            @for (item of board()?.items ?? []; track item.id) {
+              <option [value]="item.id">{{ item.name }} ({{ item.unit }})</option>
+            }
+          </select>
+          <input type="number" min="0" step="0.001" [(ngModel)]="row.quantity" [name]="'use' + $index" />
+        </div>
+      }
+      <div class="card-actions">
+        <button type="button" class="btn ghost" (click)="addRecipeRow()">Add ingredient</button>
+        <button class="btn solid" type="submit">Save recipe</button>
+      </div>
+      <p class="fine">Quantity is for one plate, in the ingredient's unit. A bill deducts it. The store can go below zero so service is not blocked.</p>
+    </form>
+  </section>
+}

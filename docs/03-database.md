@@ -54,6 +54,27 @@ A token number is unique per restaurant and service date among live rows. A tabl
 
 A bill number is unique per restaurant and service date among live rows. A live token can have only one bill that is not cancelled.
 
+## Tables in phase 4
+
+| Table | Holds |
+| --- | --- |
+| StockItems | Ingredient, unit, quantity on hand, reorder level |
+| RecipeLines | How much of an ingredient one plate of a dish uses |
+| StockMovements | Purchase, sale, or correction, with the signed quantity |
+
+An ingredient name is unique per house among live rows. A dish can list each ingredient once. Quantities are decimal (12,3). Sale movements point at the bill that consumed them. On hand may go below zero; the bill still completes.
+
+## Tables in phase 5
+
+| Table | Holds |
+| --- | --- |
+| Shifts | Named same-day shift, start, end, grace minutes |
+| ShiftAssignments | One live shift for one employee of the house |
+| LeaveRequests | Casual, sick, or unpaid leave, and whether it was approved |
+| AttendanceMarks | One check-in per employee per India service date, with a late flag |
+
+A shift name is unique per house among live rows. An employee has one live shift assignment. A check-in is unique per restaurant, employee, and service date among live rows. Employees are rows in `Users` with a house role. Archiving an employee is a soft delete.
+
 ## Seed
 
 On startup the API applies migrations and inserts roles, modules, and the super admin if that email is missing. Restarting does not reset the super admin password.

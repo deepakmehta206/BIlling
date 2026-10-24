@@ -12,7 +12,7 @@ using QRCoder;
 
 namespace Billing.Infrastructure.Services;
 
-public class BillingService(AppDbContext db, HouseAccess access, IRequestContext request, IHouseLive live) : IBillingService
+public class BillingService(AppDbContext db, HouseAccess access, IRequestContext request, IHouseLive live, IInventoryService stock) : IBillingService
 {
     private static readonly decimal[] GstRates = [0, 5, 12, 18];
 
@@ -145,6 +145,7 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
         db.Bills.Add(bill);
         if (notice is not null)
             db.OwnerNotices.Add(notice);
+        await stock.ConsumeAsync(house.Value.Id, house.Value.Name, bill, order.Lines.ToList(), cancellationToken);
 
         db.AuditLogs.Add(AuditEntries.Create(
             request,
