@@ -5,6 +5,7 @@ import {
   BillingDesk,
   Booking,
   Dashboard,
+  DayReport,
   DishRecipe,
   Employee,
   LeaveRow,
@@ -144,6 +145,10 @@ export class Api {
 
   tokenBoard(code: string) {
     return this.http.get<TokenBoard>(`${this.base}/public/board/${code}`);
+  }
+
+  dayReport(restaurantId: string, date: string) {
+    return this.http.get<DayReport>(`${this.base}/reports`, { params: this.house(restaurantId).set('date', date) });
   }
 
   billingDesk(restaurantId: string) {

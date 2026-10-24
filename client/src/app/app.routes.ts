@@ -14,6 +14,7 @@ import { PayPage } from './pages/pay';
 import { RestaurantEditorPage } from './pages/restaurant-editor';
 import { RestaurantListPage } from './pages/restaurant-list';
 import { TokenScreenPage } from './pages/screen';
+import { ReportsPage } from './pages/reports';
 import { ShellPage } from './pages/shell';
 import { StaffPage } from './pages/staff';
 
@@ -38,6 +39,7 @@ export const routes: Routes = [
       { path: 'staff', component: StaffPage },
       { path: 'attendance', component: AttendancePage },
       { path: 'bookings', component: BookingsPage },
+      { path: 'reports', component: ReportsPage },
       { path: 'audit', component: AuditPage },
     ],
   },

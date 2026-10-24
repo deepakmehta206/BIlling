@@ -24,6 +24,9 @@ public class HouseAccess(AppDbContext db, Application.Abstractions.IRequestConte
     public Task<ServiceResult<HouseScope>> RequireBilling(Guid? restaurantId, CancellationToken cancellationToken) =>
         Require(restaurantId, ModuleCodes.Billing, cancellationToken);
 
+    public Task<ServiceResult<HouseScope>> RequireReports(Guid? restaurantId, CancellationToken cancellationToken) =>
+        Require(restaurantId, ModuleCodes.Reports, cancellationToken);
+
     public Task<ServiceResult<HouseScope>> RequireInventory(Guid? restaurantId, CancellationToken cancellationToken) =>
         Require(restaurantId, ModuleCodes.Inventory, cancellationToken);
 

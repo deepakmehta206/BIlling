@@ -1,0 +1,108 @@
+@if (!desk.activeId()) {
+  <section class="empty">
+    <h2>Choose a house first.</h2>
+  </section>
+} @else {
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>The day.</h1>
+    </div>
+    <label>Service date
+      <input type="date" [ngModel]="day()" (ngModelChange)="day.set($event)" name="day" />
+    </label>
+  </header>
+
+  @if (error()) {
+    <p class="banner bad">{{ error() }}</p>
+  } @else if (report(); as book) {
+    <section class="stats">
+      <article>
+        <span>Sales</span>
+        <strong>{{ book.sales | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+        <em>{{ book.paidBills }} paid · {{ book.bills }} bills</em>
+      </article>
+      <article>
+        <span>GST</span>
+        <strong>{{ book.gst | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+        <em>Collected on paid bills</em>
+      </article>
+      <article>
+        <span>Still open</span>
+        <strong>{{ book.unpaid | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+        <em>{{ book.unpaidBills }} unpaid</em>
+      </article>
+    </section>
+
+    <section class="stats">
+      <article>
+        <span>Cash</span>
+        <strong>{{ book.cash | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+      </article>
+      <article>
+        <span>UPI</span>
+        <strong>{{ book.upi | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+      </article>
+      <article>
+        <span>Discount</span>
+        <strong>{{ book.discount | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+      </article>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <h2>Tax</h2>
+        <ul class="ledger">
+          @for (row of book.taxes; track row.gstPercent) {
+            <li>
+              <div class="ledger-main">
+                <span class="code">{{ row.gstPercent }}%</span>
+                <strong>Taxable {{ row.taxable | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+                <span>GST {{ row.gst | currency: 'INR' : 'symbol' : '1.2-2' }}</span>
+              </div>
+              <strong>{{ row.total | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+            </li>
+          } @empty {
+            <li><p class="muted">No paid bills on this date.</p></li>
+          }
+        </ul>
+      </div>
+      <div class="panel">
+        <h2>Dishes</h2>
+        <ul class="ledger">
+          @for (dish of book.dishes; track dish.itemName + (dish.variantName || '')) {
+            <li>
+              <div class="ledger-main">
+                <strong>{{ dish.quantity }} × {{ dish.itemName }} {{ dish.variantName }}</strong>
+              </div>
+              <strong>{{ dish.amount | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+            </li>
+          } @empty {
+            <li><p class="muted">No dishes on paid bills.</p></li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Day end</h2>
+      <p class="muted">{{ book.houseName }} · {{ book.serviceDate }} · paid sales are the close. Unpaid bills stay open.</p>
+      <ul class="ledger">
+        @for (row of book.rows; track row.billNumber) {
+          <li>
+            <div class="ledger-main">
+              <span class="code">{{ row.billNumber }}</span>
+              <strong>{{ row.guestName || 'Guest' }} · {{ row.tableName || 'Counter' }}</strong>
+              <span>{{ row.paymentMode }} · {{ row.status }} · GST {{ row.gstPercent }}%</span>
+            </div>
+            <strong>{{ row.total | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+          </li>
+        } @empty {
+          <li><p class="muted">No bills for this date.</p></li>
+        }
+      </ul>
+    </section>
+  } @else {
+    <p class="muted">Opening the day…</p>
+  }
+}

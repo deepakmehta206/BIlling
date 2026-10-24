@@ -51,6 +51,36 @@ public sealed class CreateBillRequest
     public string? PublicOrigin { get; set; }
 }
 
+public sealed record ReportDishDto(string ItemName, string? VariantName, int Quantity, decimal Amount);
+
+public sealed record ReportTaxDto(decimal GstPercent, decimal Taxable, decimal Gst, decimal Total);
+
+public sealed record ReportBillDto(
+    int BillNumber,
+    string? TableName,
+    string? GuestName,
+    string PaymentMode,
+    string Status,
+    decimal GstPercent,
+    decimal GstAmount,
+    decimal Total);
+
+public sealed record DayReportDto(
+    DateOnly ServiceDate,
+    string HouseName,
+    int Bills,
+    int PaidBills,
+    int UnpaidBills,
+    decimal Sales,
+    decimal Cash,
+    decimal Upi,
+    decimal Unpaid,
+    decimal Discount,
+    decimal Gst,
+    IReadOnlyList<ReportTaxDto> Taxes,
+    IReadOnlyList<ReportDishDto> Dishes,
+    IReadOnlyList<ReportBillDto> Rows);
+
 public sealed record PublicBillDto(
     Guid Id,
     Guid RestaurantId,

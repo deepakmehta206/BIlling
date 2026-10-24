@@ -269,6 +269,48 @@ export interface BillingDesk {
   bills: HouseBill[];
 }
 
+export interface ReportDish {
+  itemName: string;
+  variantName: string | null;
+  quantity: number;
+  amount: number;
+}
+
+export interface ReportTax {
+  gstPercent: number;
+  taxable: number;
+  gst: number;
+  total: number;
+}
+
+export interface ReportBill {
+  billNumber: number;
+  tableName: string | null;
+  guestName: string | null;
+  paymentMode: string;
+  status: string;
+  gstPercent: number;
+  gstAmount: number;
+  total: number;
+}
+
+export interface DayReport {
+  serviceDate: string;
+  houseName: string;
+  bills: number;
+  paidBills: number;
+  unpaidBills: number;
+  sales: number;
+  cash: number;
+  upi: number;
+  unpaid: number;
+  discount: number;
+  gst: number;
+  taxes: ReportTax[];
+  dishes: ReportDish[];
+  rows: ReportBill[];
+}
+
 export interface PublicBill {
   id: string;
   restaurantId: string;

@@ -12,3 +12,8 @@ public interface IBillingService
     Task<ServiceResult<PublicBillDto>> GetPublicAsync(Guid billId, CancellationToken cancellationToken);
     Task<GuestPaymentDto?> PaymentForAsync(GuestOrder order, CancellationToken cancellationToken);
 }
+
+public interface IReportService
+{
+    Task<ServiceResult<DayReportDto>> GetAsync(Guid? restaurantId, string? date, CancellationToken cancellationToken);
+}

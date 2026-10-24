@@ -52,7 +52,7 @@ A token number is unique per restaurant and service date among live rows. A tabl
 | BillLines | Dish snapshot copied from the token |
 | OwnerNotices | WhatsApp text prepared for the owner, and the `wa.me` link |
 
-A bill number is unique per restaurant and service date among live rows. A live token can have only one bill that is not cancelled.
+A bill number is unique per restaurant and service date among live rows. A live token can have only one bill that is not cancelled. Reports does not add a table. It reads `Bills` and `BillLines` for one service date. Cancelled bills are left out. Sales, cash, UPI, discount, and GST count only paid bills.
 
 ## Tables in phase 4
 

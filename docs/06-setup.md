@@ -78,6 +78,12 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 3. On Billing, press Paid on that token. The bill is cut, the WhatsApp link opens a message for the owner, and Print includes the QR.
 4. Audit shows `bill.created` and `bill.paid` with the IP.
 
+## Reports walk-through
+
+1. Reports is on for a new house. Open **Reports** in the sidebar.
+2. Today's paid sales, GST, cash, UPI, and the day-end list appear.
+3. Change the service date. Another day loads without mixing the two.
+
 ## Phase 4 walk-through
 
 1. Turn **Inventory** on for the house, then open Store.
