@@ -1,4 +1,4 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../core/api.service';
@@ -10,7 +10,7 @@ import { ToastService } from '../core/toast.service';
 
 @Component({
   selector: 'app-billing',
-  imports: [FormsModule, CurrencyPipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe],
   templateUrl: './billing.html',
 })
 export class BillingPage {
@@ -24,6 +24,8 @@ export class BillingPage {
   readonly gst = signal(5);
   readonly discount = signal(0);
   readonly mode = signal<'Cash' | 'Upi'>('Upi');
+  readonly slip = signal<HouseBill | null>(null);
+  readonly printedAt = signal<Date | null>(null);
 
   constructor() {
     const live = inject(LiveService);
@@ -107,5 +109,11 @@ export class BillingPage {
 
   payLink(bill: HouseBill) {
     return `${location.origin}/pay/${bill.id}`;
+  }
+
+  print(bill: HouseBill) {
+    this.slip.set(bill);
+    this.printedAt.set(new Date());
+    setTimeout(() => window.print());
   }
 }

@@ -67,9 +67,12 @@
         } @else if (bill.whatsAppStatus === 'Skipped') {
           <p class="muted">WhatsApp is on, but the owner phone is missing.</p>
         }
-        @if (bill.status === 'Unpaid') {
-          <button type="button" class="btn ghost" (click)="paid(bill)">Mark paid</button>
-        }
+        <div class="card-actions">
+          <button type="button" class="btn solid" (click)="print(bill)">Print</button>
+          @if (bill.status === 'Unpaid') {
+            <button type="button" class="btn ghost" (click)="paid(bill)">Mark paid</button>
+          }
+        </div>
       } @else {
         <h2>Today's bills</h2>
         <ul class="ledger">
@@ -80,9 +83,12 @@
                 <strong>{{ bill.guestName || 'Guest' }} · {{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
                 <span>{{ bill.paymentMode }} · {{ bill.status }}</span>
               </div>
-              @if (bill.status === 'Unpaid') {
-                <button type="button" class="btn ghost tiny" (click)="paid(bill)">Paid</button>
-              }
+              <div class="card-actions">
+                <button type="button" class="btn ghost tiny" (click)="print(bill)">Print</button>
+                @if (bill.status === 'Unpaid') {
+                  <button type="button" class="btn ghost tiny" (click)="paid(bill)">Paid</button>
+                }
+              </div>
             </li>
           } @empty {
             <li><p class="muted">No bills yet today.</p></li>
@@ -91,4 +97,31 @@
       }
     </div>
   </section>
+
+  @if (slip(); as bill) {
+    <article class="bill-slip">
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>Bill {{ bill.billNumber }}</h1>
+      <p>{{ printedAt() | date: 'd MMM y, h:mm a' }}</p>
+      <p>{{ bill.tableName || 'Counter' }} · {{ bill.guestName || 'Guest' }}</p>
+      <ul>
+        @for (line of bill.lines; track $index) {
+          <li>
+            <span>{{ line.quantity }} × {{ line.itemName }}{{ line.variantName ? ' ' + line.variantName : '' }}</span>
+            <strong>{{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
+          </li>
+        }
+      </ul>
+      <p><span>Subtotal</span><strong>{{ bill.subtotal | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+      <p><span>GST {{ bill.gstPercent }}%</span><strong>{{ bill.gstAmount | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+      @if (bill.discount > 0) {
+        <p><span>Discount</span><strong>{{ bill.discount | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+      }
+      <p class="slip-total"><span>Total</span><strong>{{ bill.total | currency: 'INR' : 'symbol' : '1.0-0' }}</strong></p>
+      <p>{{ bill.paymentMode }} · {{ bill.status }}</p>
+      @if (qr(bill); as src) {
+        <img [src]="src" alt="UPI QR" />
+      }
+    </article>
+  }
 }
