@@ -1,12 +1,22 @@
-<div class="shell">
+<div class="shell" [class.is-collapsed]="collapsed()">
   <aside class="sidebar">
-    <a class="brand" routerLink="/">
-      <span class="mark">A</span>
-      <span>Aangan</span>
-    </a>
-    <p class="side-kicker">{{ roleLabel() }}</p>
+    <div class="brand-block">
+      <div class="brand-row">
+        <a class="brand" routerLink="/" aria-label="Aangan">
+          <span class="mark">A</span>
+          <span class="brand-name">Aangan</span>
+        </a>
+        <button type="button" class="nav-toggle" (click)="toggleNav()" [attr.aria-label]="collapsed() ? 'Expand menu' : 'Collapse menu'">
+          <svg class="chev" [class.flip]="collapsed()" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6 8 12l6 6"/></svg>
+        </button>
+      </div>
+      <p class="side-kicker">{{ roleLabel() }}</p>
+    </div>
     <nav>
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" aria-label="Overview">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>
+        <span class="nav-label">Overview</span>
+      </a>
       @if (auth.isSuperAdmin()) {
         <label class="house-pick">
           House
@@ -17,27 +27,87 @@
             }
           </select>
         </label>
-        <a routerLink="/restaurants" routerLinkActive="active">Restaurants</a>
+        <a routerLink="/restaurants" routerLinkActive="active" aria-label="Restaurants">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V7l5-3v16M9 20V4l6 2v14M15 20V8l5-2v14M3 20h18"/></svg>
+          <span class="nav-label">Restaurants</span>
+        </a>
       } @else if (auth.user()?.restaurantId) {
-        <a [routerLink]="['/restaurants', auth.user()!.restaurantId]" routerLinkActive="active">Your house</a>
+        <a [routerLink]="['/restaurants', auth.user()!.restaurantId]" routerLinkActive="active" aria-label="Your house">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>
+          <span class="nav-label">Your house</span>
+        </a>
       }
-      @if (desk.has('MENU')) { <a routerLink="/menu" routerLinkActive="active">Menu</a> }
-      @if (desk.has('TABLES')) { <a routerLink="/floor" routerLinkActive="active">Floor</a> }
-      @if (desk.has('BILLING')) { <a routerLink="/billing" routerLinkActive="active">Billing</a> }
-      @if (desk.has('INVENTORY')) { <a routerLink="/inventory" routerLinkActive="active">Store</a> }
-      @if (desk.has('HRMS') && canStaff()) { <a routerLink="/staff" routerLinkActive="active">Staff</a> }
-      @if (desk.has('ATTENDANCE')) { <a routerLink="/attendance" routerLinkActive="active">Attendance</a> }
-      @if (desk.has('BOOKING')) { <a routerLink="/bookings" routerLinkActive="active">Bookings</a> }
-      @if (desk.has('REPORTS')) { <a routerLink="/reports" routerLinkActive="active">Reports</a> }
+      @if (desk.has('MENU')) {
+        <a routerLink="/menu" routerLinkActive="active" aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10a1 1 0 0 1 1 1v16l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1zM9 8h6M9 12h6"/></svg>
+          <span class="nav-label">Menu</span>
+        </a>
+      }
+      @if (desk.has('TABLES')) {
+        <a routerLink="/floor" routerLinkActive="active" aria-label="Floor">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
+          <span class="nav-label">Floor</span>
+        </a>
+      }
+      @if (desk.has('BILLING')) {
+        <a routerLink="/billing" routerLinkActive="active" aria-label="Billing">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2.2-1.4L13.5 21l-2.3-1.4L9 21l-2.2-1.4L6 21zM9 8h6M9 12h6"/></svg>
+          <span class="nav-label">Billing</span>
+        </a>
+      }
+      @if (desk.has('INVENTORY')) {
+        <a routerLink="/inventory" routerLinkActive="active" aria-label="Store">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1.2 12H5.2L4 8zM8 8V6a4 4 0 0 1 8 0v2"/></svg>
+          <span class="nav-label">Store</span>
+        </a>
+      }
+      @if (desk.has('HRMS') && canStaff()) {
+        <a routerLink="/staff" routerLinkActive="active" aria-label="Staff">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.4A3.6 3.6 0 0 0 12.4 15H7.6A3.6 3.6 0 0 0 4 18.6V20M10 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 20v-1.2a3 3 0 0 0-2.2-2.9M16.2 5.1a3 3 0 0 1 0 5.6"/></svg>
+          <span class="nav-label">Staff</span>
+        </a>
+      }
+      @if (desk.has('ATTENDANCE')) {
+        <a routerLink="/attendance" routerLinkActive="active" aria-label="Attendance">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg>
+          <span class="nav-label">Attendance</span>
+        </a>
+      }
+      @if (desk.has('BOOKING')) {
+        <a routerLink="/bookings" routerLinkActive="active" aria-label="Bookings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>
+          <span class="nav-label">Bookings</span>
+        </a>
+      }
+      @if (desk.has('REPORTS')) {
+        <a routerLink="/reports" routerLinkActive="active" aria-label="Reports">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10M12 19V5M19 19v-7"/></svg>
+          <span class="nav-label">Reports</span>
+        </a>
+      }
       @if (desk.has('TOKEN_DISPLAY') && desk.code()) {
-        <a [routerLink]="['/screen', desk.code()]">Token screen</a>
+        <a [routerLink]="['/screen', desk.code()]" aria-label="Token screen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H4zM8 20h8M12 16v4"/></svg>
+          <span class="nav-label">Token screen</span>
+        </a>
       }
-      <a routerLink="/audit" routerLinkActive="active">Audit</a>
+      <a routerLink="/audit" routerLinkActive="active" aria-label="Audit">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h7l5 5v13H8zM8 3H6a1 1 0 0 0-1 1v16M12 12h5M12 16h5"/></svg>
+        <span class="nav-label">Audit</span>
+      </a>
     </nav>
     <div class="side-user">
-      <strong>{{ auth.user()?.fullName }}</strong>
-      <span>{{ auth.user()?.email }}</span>
-      <button type="button" class="btn ghost tiny" (click)="auth.logout()">Sign out</button>
+      <div class="who">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <div>
+          <strong>{{ auth.user()?.fullName }}</strong>
+          <span>{{ auth.user()?.email }}</span>
+        </div>
+      </div>
+      <button type="button" class="sign-out" (click)="auth.logout()" aria-label="Sign out">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7V5h9v14h-9M4 12h11M12 8l4 4-4 4"/></svg>
+        <span>Sign out</span>
+      </button>
     </div>
   </aside>
   <main class="stage">

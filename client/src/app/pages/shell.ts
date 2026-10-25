@@ -16,6 +16,7 @@ export class ShellPage {
   readonly auth = inject(AuthService);
   readonly desk = inject(HouseService);
   readonly houses = signal<RestaurantListItem[]>([]);
+  readonly collapsed = signal(localStorage.getItem('aangan.nav') === 'collapsed');
 
   constructor() {
     this.auth.hydrate();
@@ -49,6 +50,17 @@ export class ShellPage {
     const user = this.auth.user();
     if (!user) return false;
     return user.isSuperAdmin || user.roles.includes('RestaurantAdmin') || user.roles.includes('Hr');
+  }
+
+  initials() {
+    const parts = (this.auth.user()?.fullName ?? '').trim().split(/\s+/).filter(Boolean);
+    const letters = `${parts[0]?.[0] ?? ''}${parts.length > 1 ? parts[1][0] : ''}`;
+    return (letters || 'A').toUpperCase();
+  }
+
+  toggleNav() {
+    this.collapsed.update((value) => !value);
+    localStorage.setItem('aangan.nav', this.collapsed() ? 'collapsed' : 'open');
   }
 
   pickHouse(id: string) {
