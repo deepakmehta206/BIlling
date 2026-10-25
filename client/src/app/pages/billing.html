@@ -49,14 +49,16 @@
         </ul>
         <form class="stack" (ngSubmit)="cut()">
           <label>GST
-            <select [ngModel]="gst()" (ngModelChange)="gst.set(+$event)" name="gst">
+            <select [ngModel]="gst()" (ngModelChange)="setGst($event)" name="gst">
               <option [ngValue]="0">0%</option>
               <option [ngValue]="5">5%</option>
               <option [ngValue]="12">12%</option>
               <option [ngValue]="18">18%</option>
             </select>
           </label>
-          <label>Discount<input type="number" min="0" [ngModel]="discount()" (ngModelChange)="discount.set(+$event)" name="discount" /></label>
+          <label>Discount
+            <input class="amount" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0.00" [value]="discountText()" (input)="setDiscount($event)" name="discount" />
+          </label>
           <div class="choice-row">
             <button type="button" class="chip" [class.on]="mode() === 'Upi'" (click)="mode.set('Upi')">UPI</button>
             <button type="button" class="chip" [class.on]="mode() === 'Cash'" (click)="mode.set('Cash')">Cash</button>

@@ -22,7 +22,7 @@ export class BillingPage {
   readonly latest = signal<HouseBill | null>(null);
   readonly error = signal<string | null>(null);
   readonly gst = signal(5);
-  readonly discount = signal(0);
+  readonly discountText = signal('');
   readonly mode = signal<'Cash' | 'Upi'>('Upi');
   readonly slip = signal<HouseBill | null>(null);
   readonly printedAt = signal<Date | null>(null);
@@ -58,13 +58,31 @@ export class BillingPage {
   pick(ticket: OpenTicket) {
     this.picked.set(ticket);
     this.latest.set(null);
+    this.discountText.set('');
+  }
+
+  setGst(value: number) {
+    this.gst.set(Number(value));
+    this.clampDiscount();
+  }
+
+  setDiscount(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let next = input.value.replace(/[^\d.]/g, '');
+    const dot = next.indexOf('.');
+    if (dot >= 0) next = `${next.slice(0, dot + 1)}${next.slice(dot + 1).replace(/\./g, '')}`;
+    if (next.startsWith('.')) next = `0${next}`;
+    const [whole, fraction] = next.split('.');
+    next = fraction === undefined ? (whole ?? '').slice(0, 8) : `${(whole ?? '').slice(0, 8)}.${fraction.slice(0, 2)}`;
+    if (next && !next.endsWith('.') && Number(next) > this.discountCap()) next = this.discountCap().toFixed(2);
+    if (input.value !== next) input.value = next;
+    this.discountText.set(next);
   }
 
   preview() {
     const ticket = this.picked();
     if (!ticket) return 0;
-    const gst = Math.round(ticket.subtotal * this.gst()) / 100;
-    return Math.max(0, ticket.subtotal + gst - Number(this.discount() || 0));
+    return Math.max(0, this.discountCap() - this.discountAmount());
   }
 
   cut() {
@@ -76,7 +94,7 @@ export class BillingPage {
         orderId: ticket.orderId,
         paymentMode: this.mode(),
         gstPercent: this.gst(),
-        discount: Number(this.discount() || 0),
+        discount: this.discountAmount(),
         publicOrigin: location.origin,
       })
       .subscribe({
@@ -88,6 +106,25 @@ export class BillingPage {
         },
         error: (error) => this.error.set(errorMessage(error)),
       });
+  }
+
+  private discountCap() {
+    const ticket = this.picked();
+    if (!ticket) return 0;
+    const gst = Math.round(ticket.subtotal * this.gst()) / 100;
+    return Math.round((ticket.subtotal + gst) * 100) / 100;
+  }
+
+  private discountAmount() {
+    const amount = Number(this.discountText());
+    if (!this.discountText() || Number.isNaN(amount)) return 0;
+    return Math.min(amount, this.discountCap());
+  }
+
+  private clampDiscount() {
+    const text = this.discountText();
+    if (!text || text.endsWith('.')) return;
+    if (Number(text) > this.discountCap()) this.discountText.set(this.discountCap().toFixed(2));
   }
 
   receive(ticket: OpenTicket) {

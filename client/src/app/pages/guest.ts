@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Api } from '../core/api.service';
@@ -30,6 +30,7 @@ export class GuestPage {
   readonly table = signal<PublicTable | null>(null);
   readonly order = signal<PublicOrder | null>(null);
   readonly cart = signal<CartLine[]>([]);
+  readonly cartOpen = signal(false);
   readonly error = signal<string | null>(null);
   readonly guestName = signal('');
   readonly choices = signal<Record<string, { variantId?: string; addonIds: string[] }>>({});
@@ -108,8 +109,34 @@ export class GuestPage {
     this.error.set(null);
   }
 
+  count() {
+    return this.cart().reduce((sum, line) => sum + line.quantity, 0);
+  }
+
   total() {
     return this.cart().reduce((sum, line) => sum + line.unit * line.quantity, 0);
+  }
+
+  openCart() {
+    if (this.cart().length) this.cartOpen.set(true);
+  }
+
+  closeCart() {
+    this.cartOpen.set(false);
+  }
+
+  setQty(key: string, delta: number) {
+    this.cart.update((lines) =>
+      lines
+        .map((line) => (line.key === key ? { ...line, quantity: line.quantity + delta } : line))
+        .filter((line) => line.quantity > 0),
+    );
+    if (!this.cart().length) this.cartOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeOnEscape() {
+    this.cartOpen.set(false);
   }
 
   pay(ticket: PublicOrder) {
@@ -132,6 +159,7 @@ export class GuestPage {
         next: (order) => {
           this.order.set(order);
           this.cart.set([]);
+          this.cartOpen.set(false);
         },
         error: (error) => this.error.set(errorMessage(error)),
       });

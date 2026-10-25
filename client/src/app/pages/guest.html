@@ -25,7 +25,7 @@
       <h1>Table {{ house.tableName }}</h1>
       <p>Order from your seat. You'll get a token number.</p>
     </header>
-    @if (error()) { <p class="banner bad">{{ error() }}</p> }
+    @if (error() && !cartOpen()) { <p class="banner bad">{{ error() }}</p> }
     @for (category of house.menu; track category.name) {
       <section>
         <h2>{{ category.name }}</h2>
@@ -64,13 +64,40 @@
       </section>
     }
     @if (cart().length) {
-      <form class="guest-cart" (ngSubmit)="place()">
-        @for (line of cart(); track line.key) {
-          <p>{{ line.quantity }} × {{ line.name }} · {{ line.unit * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
-        }
-        <input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" placeholder="Your name, optional" />
-        <button class="btn solid" type="submit">Place order · {{ total() | currency: 'INR' : 'symbol' : '1.0-0' }}</button>
-      </form>
+      <div class="guest-cart">
+        <button type="button" class="cart-bar" (click)="openCart()">
+          <span>{{ count() }} {{ count() === 1 ? 'item' : 'items' }} · {{ total() | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+          <strong>Place order</strong>
+        </button>
+      </div>
+    }
+    @if (cartOpen()) {
+      <div class="cart-sheet" (click)="closeCart()">
+        <form class="cart-card" (click)="$event.stopPropagation()" (ngSubmit)="place()">
+          <div class="cart-head">
+            <h2>Your order</h2>
+            <button type="button" class="btn ghost tiny" (click)="closeCart()">Close</button>
+          </div>
+          @if (error()) { <p class="banner bad">{{ error() }}</p> }
+          <ul>
+            @for (line of cart(); track line.key) {
+              <li class="cart-line">
+                <div>
+                  <strong>{{ line.name }}</strong>
+                  <span>{{ line.unit * line.quantity | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+                </div>
+                <div class="qty">
+                  <button type="button" (click)="setQty(line.key, -1)" [attr.aria-label]="'Remove one ' + line.name">−</button>
+                  <span>{{ line.quantity }}</span>
+                  <button type="button" (click)="setQty(line.key, 1)" [attr.aria-label]="'Add one ' + line.name">+</button>
+                </div>
+              </li>
+            }
+          </ul>
+          <input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" placeholder="Your name, optional" />
+          <button class="btn solid" type="submit">Place order · {{ total() | currency: 'INR' : 'symbol' : '1.0-0' }}</button>
+        </form>
+      </div>
     }
   } @else if (error()) {
     <p class="banner bad">{{ error() }}</p>
