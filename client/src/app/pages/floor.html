@@ -91,13 +91,15 @@
     <aside class="panel floor-side">
       @if (!selected()) {
         <h2>Pick a table</h2>
-        <p class="muted">Drag a table to place it. Click it to book, block, or copy the guest QR.</p>
+        <p class="muted">Drag a table to place it. Click it to book, block, or print the guest QR.</p>
       } @else {
         <p class="eyebrow">{{ selected()!.section }}</p>
         <h2>{{ selected()!.name }}</h2>
         <p>{{ selected()!.capacity }} seats · {{ selected()!.status }}</p>
-        <p class="fine">QR {{ guestLink(selected()!) }}</p>
+        <img class="upi-qr" [src]="tableQr(selected()!)" alt="Guest order QR" />
+        <p class="fine">{{ guestLink(selected()!) }}</p>
         <div class="card-actions">
+          <button type="button" class="btn ghost tiny" (click)="printQr()">Print QR</button>
           <button type="button" class="btn ghost tiny" (click)="saveSelected('Available')">Empty</button>
           <button type="button" class="btn ghost tiny" (click)="saveSelected('Occupied')">Occupied</button>
           <button type="button" class="btn ghost tiny" (click)="saveSelected('Blocked')">Block</button>
@@ -110,7 +112,7 @@
           <h3>Book this table</h3>
           <input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" placeholder="Guest name" />
           <input [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="phone" placeholder="Phone" />
-          <input type="number" min="1" [ngModel]="guestCount()" (ngModelChange)="guestCount.set(+$event)" name="count" />
+          <input class="count" inputmode="numeric" autocomplete="off" placeholder="Guests" name="count" [value]="guestCount() > 0 ? guestCount() : ''" (input)="setGuests($event)" />
           <button class="btn solid" type="submit">Book for 90 minutes</button>
         </form>
       }
@@ -134,4 +136,15 @@
       }
     </aside>
   </div>
+
+  @if (selected(); as table) {
+    <article class="bill-slip">
+      <p class="eyebrow">{{ desk.name() }}</p>
+      <h1>{{ table.name }}</h1>
+      <p>{{ table.section }} · {{ table.capacity }} seats</p>
+      <p>Scan to order</p>
+      <img [src]="tableQr(table)" alt="Guest order QR" />
+      <p class="slip-link">{{ guestLink(table) }}</p>
+    </article>
+  }
 }

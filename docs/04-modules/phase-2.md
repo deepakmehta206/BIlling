@@ -7,7 +7,7 @@ The dining room. A house can only use a desk when the super admin left that modu
 | Module | Screen | Who |
 | --- | --- | --- |
 | MENU | `/menu` | Staff. Categories and dishes, with sizes, add-ons and a photo. |
-| TABLES | `/floor` | Staff. Create a table, drag it, block it, archive it. |
+| TABLES | `/floor` | Staff. Create a table, drag it, block it, archive it. The table panel shows the guest QR and prints an 80mm card. |
 | BOOKING | `/bookings` and the floor panel | Staff. Hold a table for a guest. |
 | QR_ORDER | `/t/{qrToken}` | Guest, no login. The table's QR opens this page. |
 | TOKEN_DISPLAY | `/screen/{restaurantCode}` | Kitchen or the dining room TV. No login. |

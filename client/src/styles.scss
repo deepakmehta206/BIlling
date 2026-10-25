@@ -849,6 +849,7 @@ input.when-field { height: 48px; line-height: 46px; padding: 0 40px 0 14px; curs
 .swatch.occupied { background: #9d3a32; }
 .swatch.blocked { background: #b7aea4; }
 .floor-side { position: sticky; top: 16px; }
+.floor-side .upi-qr { width: 180px; height: 180px; }
 .ticket-row { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
 
 .guest-app { max-width: 560px; margin: 0 auto; padding: 28px 18px 120px; }
@@ -892,6 +893,7 @@ input.when-field { height: 48px; line-height: 46px; padding: 0 40px 0 14px; curs
 .bill-slip ul { list-style: none; margin: 10px 0; padding: 8px 0; border-top: 1px dashed #1c1410; border-bottom: 1px dashed #1c1410; }
 .bill-slip li, .bill-slip p { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0; }
 .bill-slip .slip-total { font-size: 1.15rem; margin-top: 8px; }
+.bill-slip .slip-link { display: block; text-align: center; word-break: break-all; font-size: 0.72rem; }
 .bill-slip img { width: 42mm; height: 42mm; margin: 8px auto; display: block; }
 
 @media print {

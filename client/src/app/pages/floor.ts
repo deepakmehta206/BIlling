@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import qrcode from 'qrcode-generator';
 import { Api } from '../core/api.service';
 import { errorMessage } from '../core/http-error';
 import { HouseService } from '../core/house.service';
@@ -67,8 +68,30 @@ export class FloorPage {
     this.seats.set(digits ? Number(digits) : 0);
   }
 
+  setGuests(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 3);
+    const cap = this.selected()?.capacity ?? 99;
+    const value = digits ? Math.min(cap, Number(digits)) : 0;
+    const shown = value > 0 ? String(value) : '';
+    if (input.value !== shown) input.value = shown;
+    this.guestCount.set(value);
+  }
+
   guestLink(table: FloorTable) {
     return `${location.origin}/t/${table.qrToken}`;
+  }
+
+  tableQr(table: FloorTable) {
+    const code = qrcode(0, 'M');
+    code.addData(this.guestLink(table));
+    code.make();
+    return code.createDataURL(8, 2);
+  }
+
+  printQr() {
+    if (!this.selected()) return;
+    setTimeout(() => window.print());
   }
 
   addTable() {
@@ -152,7 +175,7 @@ export class FloorPage {
   book() {
     const id = this.desk.activeId();
     const table = this.selected();
-    if (!id || !table) return;
+    if (!id || !table || this.guestCount() < 1) return;
     this.api
       .createBooking(id, {
         tableId: table.id,
