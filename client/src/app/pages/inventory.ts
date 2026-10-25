@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../core/api.service';
 import { errorMessage } from '../core/http-error';
@@ -26,7 +26,9 @@ export class InventoryPage {
   readonly error = signal<string | null>(null);
   readonly name = signal('');
   readonly unit = signal('g');
-  readonly reorder = signal(0);
+  readonly reorderText = signal('');
+  readonly units = ['g', 'kg', 'ml', 'L', 'pcs'];
+  readonly openPick = signal<string | null>(null);
   readonly selectedId = signal('');
   readonly purchaseQty = signal(0);
   readonly purchaseCost = signal(0);
@@ -75,11 +77,12 @@ export class InventoryPage {
     const id = this.desk.activeId();
     if (!id || this.name().trim().length < 2) return;
     this.api
-      .saveStockItem(id, { name: this.name().trim(), unit: this.unit(), reorderLevel: Number(this.reorder() || 0) })
+      .saveStockItem(id, { name: this.name().trim(), unit: this.unit(), reorderLevel: Number(this.reorderText() || 0) })
       .subscribe({
         next: (item) => {
           this.toasts.show(`${item.name} is in the store.`);
           this.name.set('');
+          this.reorderText.set('');
           this.selectedId.set(item.id);
           this.load();
         },
@@ -114,6 +117,67 @@ export class InventoryPage {
       },
       error: (error) => this.error.set(errorMessage(error)),
     });
+  }
+
+  setReorder(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let next = input.value.replace(/[^\d.]/g, '');
+    const dot = next.indexOf('.');
+    if (dot >= 0) next = `${next.slice(0, dot + 1)}${next.slice(dot + 1).replace(/\./g, '')}`;
+    const [whole, fraction] = next.split('.');
+    next = fraction === undefined ? (whole ?? '').slice(0, 6) : `${(whole ?? '').slice(0, 6)}.${fraction.slice(0, 3)}`;
+    if (input.value !== next) input.value = next;
+    this.reorderText.set(next);
+  }
+
+  setLineQty(index: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    let next = input.value.replace(/[^\d.]/g, '');
+    const dot = next.indexOf('.');
+    if (dot >= 0) next = `${next.slice(0, dot + 1)}${next.slice(dot + 1).replace(/\./g, '')}`;
+    const [whole, fraction] = next.split('.');
+    next = fraction === undefined ? (whole ?? '').slice(0, 6) : `${(whole ?? '').slice(0, 6)}.${fraction.slice(0, 3)}`;
+    if (input.value !== next) input.value = next;
+    const quantity = next === '' || next === '.' ? 0 : Number(next);
+    this.recipe.update((rows) => rows.map((row, at) => (at === index ? { ...row, quantity } : row)));
+  }
+
+  togglePick(which: string) {
+    this.openPick.update((current) => (current === which ? null : which));
+  }
+
+  chooseUnit(unit: string) {
+    this.unit.set(unit);
+    this.openPick.set(null);
+  }
+
+  chooseDish(id: string) {
+    this.useDish(id);
+    this.openPick.set(null);
+  }
+
+  chooseLine(index: number, stockItemId: string) {
+    this.recipe.update((rows) => rows.map((row, at) => (at === index ? { ...row, stockItemId } : row)));
+    this.openPick.set(null);
+  }
+
+  dishLabel() {
+    return this.board()?.dishes.find((dish) => dish.id === this.dishId())?.name ?? 'Choose a dish';
+  }
+
+  lineLabel(id: string) {
+    const item = this.board()?.items.find((row) => row.id === id);
+    return item ? `${item.name} (${item.unit})` : 'Ingredient';
+  }
+
+  @HostListener('document:click')
+  closePick() {
+    this.openPick.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  closePickOnEscape() {
+    this.openPick.set(null);
   }
 
   useDish(menuItemId: string, board = this.board()) {

@@ -14,16 +14,19 @@
   <section class="split">
     <div class="panel">
       <h2>Ingredients</h2>
-      <form class="inline-add" (ngSubmit)="addItem()">
+      <form class="store-add" (ngSubmit)="addItem()">
         <input [ngModel]="name()" (ngModelChange)="name.set($event)" name="name" placeholder="Chicken" />
-        <select [ngModel]="unit()" (ngModelChange)="unit.set($event)" name="unit">
-          <option value="g">g</option>
-          <option value="kg">kg</option>
-          <option value="ml">ml</option>
-          <option value="L">L</option>
-          <option value="pcs">pcs</option>
-        </select>
-        <input type="number" min="0" [ngModel]="reorder()" (ngModelChange)="reorder.set(+$event)" name="reorder" placeholder="Reorder" />
+        <span class="pick" [class.open]="openPick() === 'unit'" (click)="$event.stopPropagation()">
+          <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'unit'" (click)="togglePick('unit')">{{ unit() }}</button>
+          @if (openPick() === 'unit') {
+            <ul class="pick-list">
+              @for (choice of units; track choice) {
+                <li><button type="button" [class.on]="choice === unit()" (click)="chooseUnit(choice)">{{ choice }}</button></li>
+              }
+            </ul>
+          }
+        </span>
+        <input class="reorder" inputmode="decimal" autocomplete="off" placeholder="Reorder" name="reorder" [value]="reorderText()" (input)="setReorder($event)" />
         <button class="btn solid" type="submit">Add</button>
       </form>
       <ul class="ledger">
@@ -58,20 +61,30 @@
     <form class="panel stack" (ngSubmit)="saveRecipe()">
       <h2>Recipe</h2>
       <label>Dish
-        <select [ngModel]="dishId()" (ngModelChange)="useDish($event)" name="dish">
-          @for (dish of board()?.dishes ?? []; track dish.id) {
-            <option [value]="dish.id">{{ dish.name }}</option>
+        <span class="pick" [class.open]="openPick() === 'dish'" (click)="$event.stopPropagation()">
+          <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'dish'" (click)="togglePick('dish')">{{ dishLabel() }}</button>
+          @if (openPick() === 'dish') {
+            <ul class="pick-list">
+              @for (dish of board()?.dishes ?? []; track dish.id) {
+                <li><button type="button" [class.on]="dishId() === dish.id" (click)="chooseDish(dish.id)">{{ dish.name }}</button></li>
+              }
+            </ul>
           }
-        </select>
+        </span>
       </label>
       @for (row of recipe(); track $index) {
-        <div class="inline-add">
-          <select [(ngModel)]="row.stockItemId" [name]="'stock' + $index">
-            @for (item of board()?.items ?? []; track item.id) {
-              <option [value]="item.id">{{ item.name }} ({{ item.unit }})</option>
+        <div class="store-line">
+          <span class="pick" [class.open]="openPick() === 'line' + $index" (click)="$event.stopPropagation()">
+            <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'line' + $index" (click)="togglePick('line' + $index)">{{ lineLabel(row.stockItemId) }}</button>
+            @if (openPick() === 'line' + $index) {
+              <ul class="pick-list">
+                @for (item of board()?.items ?? []; track item.id) {
+                  <li><button type="button" [class.on]="row.stockItemId === item.id" (click)="chooseLine($index, item.id)">{{ item.name }} ({{ item.unit }})</button></li>
+                }
+              </ul>
             }
-          </select>
-          <input type="number" min="0" step="0.001" [(ngModel)]="row.quantity" [name]="'use' + $index" />
+          </span>
+          <input class="reorder" inputmode="decimal" autocomplete="off" [value]="row.quantity" (input)="setLineQty($index, $event)" [name]="'use' + $index" />
         </div>
       }
       <div class="card-actions">

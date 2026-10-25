@@ -633,6 +633,22 @@ select, .house-pick select {
 .floor-tools .when-label { flex: 1.3 1 260px; width: auto; min-width: 220px; }
 .floor-tools + .legend { margin: 10px 0 0; }
 
+.store-add, .store-line { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+.store-add > input, .store-line > input {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  height: 48px;
+  line-height: 46px;
+  padding: 0 14px;
+}
+.store-add > input:first-child { flex: 1 1 160px; }
+.store-add .pick { flex: 0 0 108px; width: 108px; }
+.store-add .reorder, .store-line .reorder { flex: 0 0 120px; width: 120px; }
+.store-add .btn { height: 48px; flex: 0 0 auto; }
+.store-line .pick { flex: 1 1 auto; min-width: 0; }
+.store-line { margin-bottom: 8px; }
+
 .inline-add input, .stack input, .stack select { margin-bottom: 8px; }
 .stack { display: grid; gap: 8px; }
 .pair-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
