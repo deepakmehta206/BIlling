@@ -387,6 +387,7 @@ input:focus {
 
 .page-head h1 { font-size: clamp(2rem, 3vw, 3rem); max-width: 16ch; }
 .page-head .day-filter { flex: 0 0 260px; width: 260px; }
+.page-head .day-filter .when-panel { left: auto; right: 0; }
 
 .stats {
   display: grid;

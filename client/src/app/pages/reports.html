@@ -8,8 +8,25 @@
       <p class="eyebrow">{{ desk.name() }}</p>
       <h1>The day.</h1>
     </div>
-    <label>Service date
-      <input type="date" [ngModel]="day()" (ngModelChange)="day.set($event)" name="day" />
+    <label class="day-filter">Service date
+      <span class="when" [class.open]="open()" (click)="onOpen($event)">
+        <input class="when-field" readonly [value]="dayLabel()" aria-haspopup="dialog" [attr.aria-expanded]="open()" />
+        @if (open()) {
+          <div class="when-panel" role="dialog" aria-label="Service date">
+            <div class="cal-head">
+              <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+              <strong>{{ monthLabel() }}</strong>
+              <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+            </div>
+            <div class="cal-grid">
+              @for (name of weekdays; track name) { <span class="cal-dow">{{ name }}</span> }
+              @for (cell of days(); track cell.key) {
+                <button type="button" [class.out]="!cell.inMonth" [class.on]="cell.selected" [class.today]="cell.today" (click)="chooseDay(cell.date)">{{ cell.label }}</button>
+              }
+            </div>
+          </div>
+        }
+      </span>
     </label>
   </header>
 
