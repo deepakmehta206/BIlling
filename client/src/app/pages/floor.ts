@@ -60,13 +60,20 @@ export class FloorPage {
     return 'available';
   }
 
+  setSeats(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 3);
+    if (input.value !== digits) input.value = digits;
+    this.seats.set(digits ? Number(digits) : 0);
+  }
+
   guestLink(table: FloorTable) {
     return `${location.origin}/t/${table.qrToken}`;
   }
 
   addTable() {
     const id = this.desk.activeId();
-    if (!id || !this.tableName().trim()) return;
+    if (!id || !this.tableName().trim() || this.seats() < 1) return;
     this.api
       .saveTable(id, { name: this.tableName(), section: this.section(), capacity: this.seats(), status: 'Available', posX: 0, posY: 0 })
       .subscribe({

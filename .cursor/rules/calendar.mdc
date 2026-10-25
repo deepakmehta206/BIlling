@@ -1,0 +1,29 @@
+---
+description: Aangan dates use the floor calendar, and the clock only when the value has a time
+alwaysApply: true
+---
+
+# Calendar
+
+A date uses the floor calendar. Do not add `input type="date"`, `datetime-local`, or a native time box.
+
+The closed control is `input.when-field`: 48px, line-height 46px, radius 14px, paper, chevron on the right. Text sits in the vertical middle. On a toolbar, align the field with the other 48px controls (`align-items: end`), not with the caption above it.
+
+The open card is `.when-panel`. Days are Monday-first. Today has a saffron ring. The selected day is `#3d2b22` with cream text. Hover is `#f6efe4`.
+
+Add `.clock` (hour, minute, AM/PM) only when the saved value includes a time, as on Show bookings at. A service date, leave date, or day filter is the calendar alone — no Time heading and no clock. A time with no date is the clock alone. Close on an outside click and on Escape. Keep the styles in `client/src/styles.scss`.
+
+```html
+<span class="when" [class.open]="open()" (click)="onWhenClick($event)">
+  <input class="when-field" readonly [value]="label()" />
+  @if (open()) {
+    <div class="when-panel">
+      <!-- month head and .cal-grid -->
+      @if (withTime) {
+        <p class="fine">Time</p>
+        <div class="clock"><!-- hour, minute, AM/PM --></div>
+      }
+    </div>
+  }
+</span>
+```

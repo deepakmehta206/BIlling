@@ -17,9 +17,9 @@
 
   <div class="floor-tools">
     <form class="inline-add" (ngSubmit)="addTable()">
-      <input [ngModel]="tableName()" (ngModelChange)="tableName.set($event)" name="tableName" placeholder="T1" />
-      <input [ngModel]="section()" (ngModelChange)="section.set($event)" name="section" placeholder="Hall" />
-      <input type="number" min="1" [ngModel]="seats()" (ngModelChange)="seats.set(+$event)" name="seats" />
+      <input [ngModel]="tableName()" (ngModelChange)="tableName.set($event)" name="tableName" placeholder="Table" />
+      <input [ngModel]="section()" (ngModelChange)="section.set($event)" name="section" placeholder="Section" />
+      <input class="seats" inputmode="numeric" autocomplete="off" placeholder="Seats" name="seats" [value]="seats() > 0 ? seats() : ''" (input)="setSeats($event)" />
       <button class="btn solid" type="submit">Add table</button>
     </form>
     <label class="when-label">Show bookings at
@@ -61,8 +61,8 @@
         }
       </span>
     </label>
-    <p class="legend"><span class="swatch available"></span> Empty <span class="swatch booked"></span> Booked <span class="swatch occupied"></span> Occupied <span class="swatch blocked"></span> Blocked</p>
   </div>
+  <p class="legend"><span class="swatch available"></span> Empty <span class="swatch booked"></span> Booked <span class="swatch occupied"></span> Occupied <span class="swatch blocked"></span> Blocked</p>
 
   <div class="floor-layout">
     <div class="floor-room" #room>
