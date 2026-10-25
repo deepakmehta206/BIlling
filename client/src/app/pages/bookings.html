@@ -8,7 +8,26 @@
       <p class="eyebrow">{{ desk.name() }}</p>
       <h1>Today's book.</h1>
     </div>
-    <input type="date" [ngModel]="day()" (ngModelChange)="day.set($event); load()" name="day" />
+    <label class="day-filter">Day
+      <span class="when" [class.open]="open() === 'day'" (click)="onOpen($event, 'day')">
+        <input class="when-field" readonly [value]="dayLabel(day())" aria-haspopup="dialog" [attr.aria-expanded]="open() === 'day'" />
+        @if (open() === 'day') {
+          <div class="when-panel" role="dialog" aria-label="Day">
+            <div class="cal-head">
+              <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+              <strong>{{ monthLabel() }}</strong>
+              <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+            </div>
+            <div class="cal-grid">
+              @for (name of weekdays; track name) { <span class="cal-dow">{{ name }}</span> }
+              @for (day of days(); track day.key) {
+                <button type="button" [class.out]="!day.inMonth" [class.on]="day.selected" [class.today]="day.today" (click)="chooseFilterDay(day.date)">{{ day.label }}</button>
+              }
+            </div>
+          </div>
+        }
+      </span>
+    </label>
   </header>
   @if (error()) { <p class="banner bad">{{ error() }}</p> }
   <section class="split">
@@ -33,16 +52,57 @@
     <form class="panel stack" (ngSubmit)="create()">
       <h2>New booking</h2>
       <label>Table
-        <select [ngModel]="tableId()" (ngModelChange)="tableId.set($event)" name="table">
-          @for (table of tables(); track table.id) {
-            <option [value]="table.id">{{ table.name }} · {{ table.capacity }} seats</option>
+        <span class="pick" [class.open]="open() === 'table'" (click)="onOpen($event, 'table')">
+          <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'table'">{{ tableLabel() }}</button>
+          @if (open() === 'table') {
+            <ul class="pick-list">
+              @for (table of tables(); track table.id) {
+                <li><button type="button" [class.on]="tableId() === table.id" (click)="chooseTable(table.id)">{{ table.name }} · {{ table.capacity }} seats</button></li>
+              }
+            </ul>
           }
-        </select>
+        </span>
       </label>
       <label>Guest<input [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guest" /></label>
       <label>Phone<input [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="phone" /></label>
-      <label>Guests<input type="number" min="1" [ngModel]="guestCount()" (ngModelChange)="guestCount.set(+$event)" name="count" /></label>
-      <label>Starts<input type="datetime-local" [ngModel]="starts()" (ngModelChange)="starts.set($event)" name="starts" /></label>
+      <label>Guests<input class="count" inputmode="numeric" autocomplete="off" placeholder="1" [value]="guestCount() > 0 ? guestCount() : ''" (input)="setGuests($event)" name="count" /></label>
+      <label>Starts
+        <span class="when" [class.open]="open() === 'starts'" (click)="onOpen($event, 'starts')">
+          <input class="when-field" readonly [value]="startsLabel()" aria-haspopup="dialog" [attr.aria-expanded]="open() === 'starts'" />
+          @if (open() === 'starts') {
+            <div class="when-panel" role="dialog" aria-label="Starts">
+              <div class="cal-head">
+                <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+                <strong>{{ monthLabel() }}</strong>
+                <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+              </div>
+              <div class="cal-grid">
+                @for (name of weekdays; track name) { <span class="cal-dow">{{ name }}</span> }
+                @for (day of days(); track day.key) {
+                  <button type="button" [class.out]="!day.inMonth" [class.on]="day.selected" [class.today]="day.today" (click)="chooseStartDay(day.date)">{{ day.label }}</button>
+                }
+              </div>
+              <p class="fine">Time</p>
+              <div class="clock">
+                <div class="clock-col">
+                  @for (hour of hours; track hour) {
+                    <button type="button" [class.on]="hour12() === hour" (click)="chooseHour(hour)">{{ hour }}</button>
+                  }
+                </div>
+                <div class="clock-col">
+                  @for (minute of minutes; track minute) {
+                    <button type="button" [class.on]="minuteNow() === minute" (click)="chooseMinute(minute)">{{ pad2(minute) }}</button>
+                  }
+                </div>
+                <div class="clock-col">
+                  <button type="button" [class.on]="!isPm()" (click)="setPeriod(false)">AM</button>
+                  <button type="button" [class.on]="isPm()" (click)="setPeriod(true)">PM</button>
+                </div>
+              </div>
+            </div>
+          }
+        </span>
+      </label>
       <button class="btn solid" type="submit">Hold for 90 minutes</button>
     </form>
   </section>

@@ -386,6 +386,7 @@ input:focus {
 }
 
 .page-head h1 { font-size: clamp(2rem, 3vw, 3rem); max-width: 16ch; }
+.page-head .day-filter { flex: 0 0 260px; width: 260px; }
 
 .stats {
   display: grid;
@@ -654,7 +655,7 @@ select, .house-pick select {
 .stack .pick, .stack .when, .date-pair .when { width: 100%; }
 .date-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
 .stack .when-field { margin: 0; }
-.stack input.grace { margin: 0; height: 48px; line-height: 46px; padding: 0 14px; }
+.stack input.grace, .stack input.count { margin: 0; height: 48px; line-height: 46px; padding: 0 14px; }
 .date-pair label:last-child .when-panel { left: auto; right: 0; }
 .pair-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
 

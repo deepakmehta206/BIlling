@@ -1,0 +1,29 @@
+---
+description: Aangan counts and amounts use a plain text field, not a native number box
+alwaysApply: true
+---
+
+# Numbers
+
+A count, amount, or quantity is a text field. Do not add `input type="number"`. The native box shows spinners and accepts `e`, `+`, and `-`.
+
+The closed control matches the other 48px fields: radius 14px, paper background, saffron focus ring, line-height 46px, padding `0 14px`, text in the vertical middle. Styles stay in `client/src/styles.scss`.
+
+Bind `[value]` and rewrite `input.value` on `(input)` so a trailing dot or a rejected character does not snap back. Use `inputmode="numeric"` for a whole number and `inputmode="decimal"` for money or a measured quantity.
+
+```html
+<input class="count" inputmode="numeric" autocomplete="off" placeholder="1" [value]="guestCount() > 0 ? guestCount() : ''" (input)="setGuests($event)" />
+```
+
+```typescript
+setGuests(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const digits = input.value.replace(/\D/g, '').slice(0, 3);
+  const value = digits ? Math.min(cap, Number(digits)) : 0;
+  const shown = value > 0 ? String(value) : '';
+  if (input.value !== shown) input.value = shown;
+  this.guestCount.set(value);
+}
+```
+
+A whole number keeps digits only and clamps to its range: guests `1` through the table's seats, seats up to 3 digits, grace `0`–`90`. A decimal keeps one dot and a fixed number of fraction digits (price 4 whole and 2 fraction, reorder 6 whole and 3 fraction). An empty field stores `0` and shows blank. Leave an existing native number box until that screen is edited, then use this field.
