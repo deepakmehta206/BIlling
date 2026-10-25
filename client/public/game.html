@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Thali Catch – Your Restaurant</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:linear-gradient(160deg,#ff9933,#ff4e50 55%,#c2185b);color:#fff}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:14px}
+.screen.on{display:flex}
+h1{font-size:2.1rem;text-shadow:0 3px 0 #0003}
+h2{font-size:1.5rem}
+.card{background:#fff;color:#333;border-radius:22px;padding:22px;width:100%;max-width:380px;box-shadow:0 10px 30px #0004}
+input{width:100%;font-size:1.2rem;padding:12px;border:2px solid #ff9933;border-radius:12px;text-align:center;margin:8px 0}
+button{font-size:1.2rem;font-weight:700;border:0;border-radius:40px;padding:14px 28px;cursor:pointer;background:#2e7d32;color:#fff;box-shadow:0 5px 0 #1b5e20;width:100%;max-width:380px}
+button:active{transform:translateY(3px);box-shadow:0 2px 0 #1b5e20}
+button.alt{background:#fff;color:#c2185b;box-shadow:0 5px 0 #0003}
+button.stop{background:#1565c0;box-shadow:0 5px 0 #0d47a1}
+.small{font-size:.9rem;opacity:.9}
+table{width:100%;border-collapse:collapse;margin-top:8px}td{padding:4px;border-bottom:1px solid #eee}
+#game{position:fixed;inset:0;display:none;background:linear-gradient(#fff8e1,#ffe0b2)}
+#game.on{display:block}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;color:#5d4037;font-weight:800;font-size:1.05rem;pointer-events:none}
+#hud .pill{background:#fffc;border-radius:20px;padding:6px 12px;box-shadow:0 2px 6px #0002}
+#served{position:absolute;bottom:12px;right:12px;width:auto;font-size:.85rem;padding:8px 14px}
+.coupon{font-family:monospace;font-size:1.7rem;font-weight:900;letter-spacing:2px;border:3px dashed #c2185b;border-radius:14px;padding:14px;margin:10px 0;color:#c2185b;background:#fff3f7}
+.big{font-size:3rem;font-weight:900;color:#2e7d32}
+</style></head><body>
+
+<section id="start" class="screen on">
+  <div style="font-size:3.5rem">🍛</div>
+  <h1 id="rname">Your Restaurant</h1>
+  <div class="card">
+    <h2>Thali Catch!</h2>
+    <p class="small" style="margin:6px 0 10px">Khana aane tak khelo, discount jeeto! 🎉<br>Play while your food is cooking & win a discount.</p>
+    <input id="table" type="number" inputmode="numeric" placeholder="Table No. / Table number" min="1">
+    <table id="tiers"></table>
+  </div>
+  <button id="play">▶ Play / Khelo</button>
+  <button class="stop" id="claimStart" style="display:none">🍽 Food served — Claim reward</button>
+  <p class="small" id="bestStart"></p>
+</section>
+
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div id="hud"><span class="pill">⭐ <span id="sc">0</span></span><span class="pill">❤️ <span id="lv">3</span></span><span class="pill">⏱ <span id="tm">75</span>s</span></div>
+  <button class="stop" id="served">🍽 Food served — stop</button>
+</div>
+
+<section id="over" class="screen">
+  <div style="font-size:3rem">🥳</div>
+  <h1>Round Over!</h1>
+  <div class="card">
+    <p>Score: <b id="oScore">0</b></p>
+    <p>Best / Sabse achha: <b id="oBest">0</b></p>
+    <div class="big" id="oDisc">0%</div>
+    <p class="small" id="oNext"></p>
+  </div>
+  <button id="again">🔁 Play again / Phir se khelo</button>
+  <button class="stop" id="claim">🍽 Food served — Claim discount</button>
+</section>
+
+<section id="reward" class="screen">
+  <div style="font-size:3rem">🎁</div>
+  <h1>Badhai ho! Congrats!</h1>
+  <div class="card">
+    <p id="rInfo"></p>
+    <div class="big" id="rDisc">0%</div>
+    <div class="coupon" id="rCode">----</div>
+    <p><b>Show this to your waiter</b><br>Yeh code waiter ko dikhayein 🙏</p>
+    <p class="small" id="rTime" style="margin-top:8px;color:#777"></p>
+  </div>
+  <p class="small">One coupon per visit. Enjoy your meal! 😋</p>
+</section>
+
+<script>
+// ===== CONFIG (edit me) =====
+const CONFIG = {
+  restaurantName: "Your Restaurant",
+  roundSeconds: 75,
+  lives: 3,
+  // Sorted ascending: highest matching minScore wins
+  tiers: [
+    { minScore: 0,   discount: 0  },
+    { minScore: 50,  discount: 5  },
+    { minScore: 100, discount: 10 },
+    { minScore: 200, discount: 15 },
+  ],
+  goodItems: [ {e:"🍛",p:10},{e:"🥘",p:10},{e:"🍚",p:5},{e:"🫓",p:5},{e:"🍲",p:10},{e:"🥟",p:5},{e:"🍮",p:15},{e:"🥭",p:20,rare:true} ],
+  badItems:  [ "🌶️","💣" ],
+  storageKey: "thaliCatch_v1",
+};
+// ============================
+const $=id=>document.getElementById(id);
+document.title="Thali Catch – "+CONFIG.restaurantName; $("rname").textContent=CONFIG.restaurantName;
+const tierFor=s=>CONFIG.tiers.reduce((a,t)=>s>=t.minScore?t:a,CONFIG.tiers[0]);
+const nextTier=s=>CONFIG.tiers.find(t=>t.minScore>s);
+$("tiers").innerHTML="<tr><td><b>Score</b></td><td><b>Discount</b></td></tr>"+CONFIG.tiers.map((t,i)=>{const n=CONFIG.tiers[i+1];return `<tr><td>${n?t.minScore+"–"+(n.minScore-1):t.minScore+"+"}</td><td>${t.discount}%</td></tr>`}).join("");
+
+let store=JSON.parse(localStorage.getItem(CONFIG.storageKey)||"{}");
+const save=()=>localStorage.setItem(CONFIG.storageKey,JSON.stringify(store));
+store.best=store.best||0;
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$("game").classList.remove("on");if(id==="game")$("game").classList.add("on");else $(id).classList.add("on");}
+if(store.table)$("table").value=store.table;
+function refreshStart(){ if(store.best){$("bestStart").textContent=`Best: ${store.best} pts → ${tierFor(store.best).discount}% off`;$("claimStart").style.display="block";} }
+refreshStart();
+if(store.coupon) showReward();
+
+// ===== GAME =====
+const cv=$("cv"),ctx=cv.getContext("2d");let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener("resize",resize);resize();
+let G=null;
+function startGame(){
+  const t=$("table").value.trim(); if(!t){$("table").focus();$("table").style.borderColor="red";return;}
+  store.table=t;save();
+  G={score:0,lives:CONFIG.lives,time:CONFIG.roundSeconds,items:[],fx:[],px:W/2,tx:W/2,spawn:0,last:performance.now(),run:true,combo:0};
+  $("lv").textContent=G.lives;show("game");requestAnimationFrame(loop);
+}
+function setX(x){if(G)G.tx=x;}
+cv.addEventListener("pointerdown",e=>setX(e.clientX));
+cv.addEventListener("pointermove",e=>{if(e.pointerType==="mouse"||e.buttons)setX(e.clientX)});
+addEventListener("keydown",e=>{if(!G)return;if(e.key==="ArrowLeft")G.tx-=60;if(e.key==="ArrowRight")G.tx+=60;});
+function spawn(){
+  const prog=1-G.time/CONFIG.roundSeconds;
+  const bad=Math.random()<0.18+prog*0.17;
+  let it;
+  if(bad) it={e:CONFIG.badItems[Math.random()*CONFIG.badItems.length|0],bad:true};
+  else{const pool=CONFIG.goodItems.filter(g=>!g.rare||Math.random()<.25);const g=pool[Math.random()*pool.length|0];it={e:g.e,p:g.p};}
+  it.x=30+Math.random()*(W-60);it.y=-40;it.vy=(140+Math.random()*80)*(1+prog*1.1);it.r=Math.random()*6.28;it.vr=(Math.random()-.5)*3;
+  G.items.push(it);
+}
+function loop(now){
+  if(!G||!G.run)return;
+  const dt=Math.min((now-G.last)/1000,.05);G.last=now;
+  G.time-=dt;if(G.time<=0){G.time=0;endRound();return;}
+  const prog=1-G.time/CONFIG.roundSeconds;
+  G.spawn-=dt;if(G.spawn<=0){spawn();G.spawn=Math.max(.32,.9-prog*.55);}
+  G.tx=Math.max(45,Math.min(W-45,G.tx));G.px+=(G.tx-G.px)*Math.min(1,dt*18);
+  const py=H-90;
+  for(const it of G.items){
+    it.y+=it.vy*dt;it.r+=it.vr*dt;
+    if(!it.done&&it.y>py-25&&it.y<py+20&&Math.abs(it.x-G.px)<55){
+      it.done=true;
+      if(it.bad){G.lives--;G.combo=0;$("lv").textContent=G.lives;G.fx.push({x:it.x,y:py-30,t:"Ouch! 🔥",c:"#d32f2f",a:1});navigator.vibrate&&navigator.vibrate(120);if(G.lives<=0){endRound();return;}}
+      else{G.combo++;const pts=it.p+(G.combo>=5?5:0);G.score+=pts;G.fx.push({x:it.x,y:py-30,t:"+"+pts+(G.combo>=5?" 🔥combo":""),c:"#2e7d32",a:1});}
+    }
+    if(!it.done&&!it.bad&&it.y>H+30){it.done=true;G.combo=0;}
+  }
+  G.items=G.items.filter(i=>!i.done&&i.y<H+40);
+  // draw
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#ffcc8022";for(let i=0;i<W;i+=40)ctx.fillRect(i,0,20,H);
+  ctx.font="40px serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  for(const it of G.items){ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.r);ctx.fillText(it.e,0,0);ctx.restore();}
+  // thali
+  ctx.save();ctx.translate(G.px,py);
+  ctx.fillStyle="#9e9e9e";ctx.beginPath();ctx.ellipse(0,6,62,16,0,0,6.28);ctx.fill();
+  ctx.fillStyle="#e0e0e0";ctx.beginPath();ctx.ellipse(0,0,58,14,0,0,6.28);ctx.fill();
+  ctx.fillStyle="#f5f5f5";ctx.beginPath();ctx.ellipse(0,-2,44,9,0,0,6.28);ctx.fill();
+  ["#ffb300","#e64a19","#43a047"].forEach((c,i)=>{ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(-26+i*26,-4,9,4,0,0,6.28);ctx.fill();});
+  ctx.restore();
+  ctx.font="bold 20px system-ui";
+  for(const f of G.fx){ctx.globalAlpha=f.a;ctx.fillStyle=f.c;ctx.fillText(f.t,f.x,f.y);f.y-=50*dt;f.a-=dt*1.2;}
+  ctx.globalAlpha=1;G.fx=G.fx.filter(f=>f.a>0);
+  $("sc").textContent=G.score;$("tm").textContent=Math.ceil(G.time);
+  requestAnimationFrame(loop);
+}
+function endRound(){
+  if(!G)return;G.run=false;
+  store.best=Math.max(store.best,G.score);store.plays=(store.plays||0)+1;save();
+  $("oScore").textContent=G.score;$("oBest").textContent=store.best;
+  $("oDisc").textContent=tierFor(store.best).discount+"% OFF";
+  const n=nextTier(store.best);$("oNext").textContent=n?`${n.minScore-store.best} more pts for ${n.discount}% — try again! Aur koshish karo 💪`:"Maximum discount unlocked! 🏆";
+  G=null;show("over");
+}
+function rnd(n){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";const a=crypto.getRandomValues(new Uint8Array(n));for(const b of a)s+=c[b%c.length];return s;}
+function claim(){
+  if(G)endRound();
+  if(!store.coupon){
+    const d=tierFor(store.best).discount;
+    const tb=String(store.table||"0").replace(/\D/g,"").slice(0,3)||"0";
+    store.coupon={code:d>0?`TBL${tb}-${rnd(4)}-${d}`:null,disc:d,score:store.best,table:tb,at:new Date().toLocaleString()};
+    save();
+  }
+  showReward();
+}
+function showReward(){
+  const c=store.coupon;
+  $("rInfo").textContent=`Table ${c.table} • Best score ${c.score}`;
+  $("rDisc").textContent=c.disc+"% OFF";
+  $("rCode").textContent=c.code||"No discount this time 😅";
+  $("rTime").textContent="Issued: "+c.at;
+  show("reward");
+}
+$("play").onclick=startGame;$("again").onclick=startGame;
+$("served").onclick=claim;$("claim").onclick=claim;$("claimStart").onclick=claim;
+</script></body></html>

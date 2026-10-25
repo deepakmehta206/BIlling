@@ -76,12 +76,13 @@
           <img class="upi-qr" [src]="src" alt="UPI QR" />
           <p class="fine"><a [href]="payLink(bill)">Guest pay page</a></p>
         }
-        @if (bill.whatsAppUrl) {
-          <a class="btn solid" [href]="bill.whatsAppUrl" target="_blank" rel="noopener">Send to owner on WhatsApp</a>
-        } @else if (bill.whatsAppStatus === 'Skipped') {
+        @if (bill.whatsAppStatus === 'Skipped' && !bill.whatsAppUrl) {
           <p class="muted">WhatsApp is on, but the owner phone is missing.</p>
         }
-        <div class="card-actions">
+        <div class="card-actions bill-actions">
+          @if (bill.whatsAppUrl) {
+            <a class="btn solid" [href]="bill.whatsAppUrl" target="_blank" rel="noopener">Send to owner on WhatsApp</a>
+          }
           <button type="button" class="btn solid" (click)="print(bill)">Print</button>
           @if (bill.status === 'Unpaid') {
             <button type="button" class="btn ghost" (click)="paid(bill)">Mark paid</button>
