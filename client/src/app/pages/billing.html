@@ -59,6 +59,9 @@
           <label>Discount
             <input class="amount" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0.00" [value]="discountText()" (input)="setDiscount($event)" name="discount" />
           </label>
+          @if (ticket.playDiscountPercent) {
+            <p class="fine">Game won {{ ticket.playDiscountPercent }}% on this token.</p>
+          }
           <div class="choice-row">
             <button type="button" class="chip" [class.on]="mode() === 'Upi'" (click)="mode.set('Upi')">UPI</button>
             <button type="button" class="chip" [class.on]="mode() === 'Cash'" (click)="mode.set('Cash')">Cash</button>

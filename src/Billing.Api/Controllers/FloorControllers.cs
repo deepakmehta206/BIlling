@@ -99,6 +99,10 @@ public class PublicFloorController(IFloorService floor) : ControllerBase
     public async Task<IActionResult> OrderStatus(Guid orderId, CancellationToken cancellationToken) =>
         ApiResults.From(await floor.GetPublicOrderAsync(orderId, cancellationToken));
 
+    [HttpPost("orders/{orderId:guid}/play")]
+    public async Task<IActionResult> Play(Guid orderId, ClaimPlayRequest request, CancellationToken cancellationToken) =>
+        ApiResults.From(await floor.ClaimPlayAsync(orderId, request, cancellationToken));
+
     [HttpGet("board/{code}")]
     public async Task<IActionResult> Board(string code, CancellationToken cancellationToken) =>
         ApiResults.From(await floor.GetPublicBoardAsync(code, cancellationToken));

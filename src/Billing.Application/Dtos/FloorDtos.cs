@@ -102,7 +102,8 @@ public sealed record TicketDto(
     string? TableName,
     string? GuestName,
     DateTime CreatedAt,
-    IReadOnlyList<TicketLineDto> Lines);
+    IReadOnlyList<TicketLineDto> Lines,
+    int? PlayDiscountPercent);
 
 public sealed class SetOrderStatusRequest
 {
@@ -144,6 +145,11 @@ public sealed class PlaceOrderRequest
     public List<PlaceOrderLine> Lines { get; set; } = [];
 }
 
+public sealed class ClaimPlayRequest
+{
+    public int Score { get; set; }
+}
+
 public sealed record PublicOrderDto(
     Guid Id,
     Guid RestaurantId,
@@ -156,6 +162,8 @@ public sealed record PublicOrderDto(
     int? BillNumber,
     decimal? Payable,
     string? PaymentStatus,
-    string? QrPng);
+    string? QrPng,
+    int? PlayDiscountPercent,
+    bool CanPlay);
 
 public sealed record TokenBoardDto(Guid RestaurantId, string RestaurantName, string Code, IReadOnlyList<TicketDto> Tickets);

@@ -84,10 +84,12 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
 
         var subtotal = order.Lines.Sum(line => line.UnitPrice * line.Quantity);
         var gst = decimal.Round(subtotal * body.GstPercent / 100m, 2, MidpointRounding.AwayFromZero);
-        if (body.Discount > subtotal + gst)
+        var cap = subtotal + gst;
+        if (body.Discount > cap)
             return ServiceResult<BillDto>.Fail(400, "Discount is larger than the bill.");
 
-        var total = subtotal + gst - body.Discount;
+        var discount = Math.Min(cap, Math.Max(body.Discount, PlayRupees(order, subtotal)));
+        var total = cap - discount;
         var restaurant = await db.Restaurants.FirstAsync(item => item.Id == house.Value.Id, cancellationToken);
         string? upiUri = null;
         if (mode == PaymentModes.Upi)
@@ -120,7 +122,7 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             Subtotal = subtotal,
             GstPercent = body.GstPercent,
             GstAmount = gst,
-            Discount = body.Discount,
+            Discount = discount,
             Total = total,
             Status = paidNow ? BillStatuses.Paid : BillStatuses.Unpaid,
             PaymentMode = mode,
@@ -276,7 +278,8 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
         }
 
         var subtotal = order.Lines.Sum(line => line.UnitPrice * line.Quantity);
-        var total = subtotal + decimal.Round(subtotal * 5m / 100m, 2, MidpointRounding.AwayFromZero);
+        var gst = decimal.Round(subtotal * 5m / 100m, 2, MidpointRounding.AwayFromZero);
+        var total = Math.Max(0, subtotal + gst - PlayRupees(order, subtotal));
         var uri = BuildUpi(restaurant.UpiId, restaurant.Name, total, $"Token {order.TokenNumber}");
         return new GuestPaymentDto(null, null, total, BillStatuses.Unpaid, QrPng(uri));
     }
@@ -334,6 +337,13 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
         };
     }
 
+    private static decimal PlayRupees(GuestOrder order, decimal subtotal)
+    {
+        var percent = order.PlayDiscountPercent ?? 0;
+        if (percent <= 0) return 0;
+        return decimal.Round(subtotal * percent / 100m, 2, MidpointRounding.AwayFromZero);
+    }
+
     private static OpenTicketDto MapTicket(GuestOrder order, GuestPaymentDto? payment)
     {
         var lines = order.Lines.Select(line => new BillLineDto(line.ItemName, line.VariantName, line.Quantity, line.UnitPrice)).ToList();
@@ -347,7 +357,8 @@ public class BillingService(AppDbContext db, HouseAccess access, IRequestContext
             subtotal,
             lines,
             payment?.QrPng,
-            payment?.Total ?? subtotal);
+            payment?.Total ?? subtotal,
+            order.PlayDiscountPercent);
     }
 
     private static BillDto MapBill(Bill bill, bool includeQr)

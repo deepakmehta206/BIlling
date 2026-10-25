@@ -58,7 +58,9 @@ export class BillingPage {
   pick(ticket: OpenTicket) {
     this.picked.set(ticket);
     this.latest.set(null);
-    this.discountText.set('');
+    const percent = ticket.playDiscountPercent ?? 0;
+    const rupees = percent > 0 ? Math.round(ticket.subtotal * percent) / 100 : 0;
+    this.discountText.set(rupees > 0 ? rupees.toFixed(2) : '');
   }
 
   setGst(value: number) {

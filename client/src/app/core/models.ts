@@ -184,6 +184,7 @@ export interface Ticket {
   guestName: string | null;
   createdAt: string;
   lines: TicketLine[];
+  playDiscountPercent: number | null;
 }
 
 export interface PublicDish {
@@ -218,6 +219,8 @@ export interface PublicOrder {
   payable: number | null;
   paymentStatus: string | null;
   qrPng: string | null;
+  playDiscountPercent: number | null;
+  canPlay: boolean;
 }
 
 export interface TokenBoard {
@@ -244,6 +247,7 @@ export interface OpenTicket {
   lines: BillLine[];
   qrPng: string | null;
   payable: number;
+  playDiscountPercent: number | null;
 }
 
 export interface HouseBill {

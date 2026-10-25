@@ -17,8 +17,17 @@
           <p>Pay {{ ticket.payable | currency: 'INR' : 'symbol' : '1.2-2' }}. The bill is cut when payment is received.</p>
         }
       }
+      @if (ticket.playDiscountPercent != null) {
+        <p>{{ ticket.playDiscountPercent }}% off is on this token.</p>
+      }
+      @if (ticket.canPlay) {
+        <button type="button" class="btn solid" (click)="playing.set(true)">Play for a discount</button>
+      }
       <p>We'll move this number to Ready when the kitchen is done.</p>
     </div>
+    @if (playing()) {
+      <app-thali [tableName]="ticket.tableName || 'Counter'" [houseName]="ticket.restaurantName" (done)="claimPlay($event)" (closed)="playing.set(false)" />
+    }
   } @else if (table(); as house) {
     <header class="guest-head">
       <p class="eyebrow">{{ house.restaurantName }}</p>

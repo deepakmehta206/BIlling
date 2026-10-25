@@ -43,6 +43,8 @@ public class GuestOrder : AuditableEntity
     public string Status { get; set; } = "Preparing";
     public string? GuestName { get; set; }
     public string? Note { get; set; }
+    public int? PlayScore { get; set; }
+    public int? PlayDiscountPercent { get; set; }
     public ICollection<OrderLine> Lines { get; set; } = new List<OrderLine>();
 }
 

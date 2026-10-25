@@ -374,7 +374,7 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
         await live.Changed(table.RestaurantId, cancellationToken);
         order.Lines = lines;
         var payment = await billing.PaymentForAsync(order, cancellationToken);
-        return ServiceResult<PublicOrderDto>.Ok(MapPublic(order, house.Value.Name, payment));
+        return ServiceResult<PublicOrderDto>.Ok(await MapPublic(order, house.Value.Name, payment, cancellationToken));
     }
 
     public async Task<ServiceResult<PublicOrderDto>> GetPublicOrderAsync(Guid orderId, CancellationToken cancellationToken)
@@ -385,7 +385,33 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
 
         var name = await db.Restaurants.Where(item => item.Id == order.RestaurantId).Select(item => item.Name).FirstAsync(cancellationToken);
         var payment = await billing.PaymentForAsync(order, cancellationToken);
-        return ServiceResult<PublicOrderDto>.Ok(MapPublic(order, name, payment));
+        return ServiceResult<PublicOrderDto>.Ok(await MapPublic(order, name, payment, cancellationToken));
+    }
+
+    public async Task<ServiceResult<PublicOrderDto>> ClaimPlayAsync(Guid orderId, ClaimPlayRequest body, CancellationToken cancellationToken)
+    {
+        var order = await db.GuestOrders.Include(item => item.Lines).FirstOrDefaultAsync(item => item.Id == orderId, cancellationToken);
+        if (order is null)
+            return ServiceResult<PublicOrderDto>.Fail(404, "Order not found.");
+        if (order.Status is not (OrderStatuses.Preparing or OrderStatuses.Ready))
+            return ServiceResult<PublicOrderDto>.Fail(409, "This token is already closed.");
+        if (!await access.IsOn(order.RestaurantId, ModuleCodes.Play, cancellationToken))
+            return ServiceResult<PublicOrderDto>.Fail(403, "Play is turned off for this house.");
+
+        if (order.PlayDiscountPercent is null)
+        {
+            var score = Math.Clamp(body.Score, 0, 10000);
+            order.PlayScore = score;
+            order.PlayDiscountPercent = PlayPercent(score);
+            var name = await db.Restaurants.Where(item => item.Id == order.RestaurantId).Select(item => item.Name).FirstAsync(cancellationToken);
+            db.AuditLogs.Add(AuditEntries.Create(request, "order.play", "GuestOrder", order.Id.ToString(), $"Token {order.TokenNumber} won {order.PlayDiscountPercent}%.", order.RestaurantId, name, order.GuestName ?? "guest"));
+            await db.SaveChangesAsync(cancellationToken);
+            await live.Changed(order.RestaurantId, cancellationToken);
+        }
+
+        var houseName = await db.Restaurants.Where(item => item.Id == order.RestaurantId).Select(item => item.Name).FirstAsync(cancellationToken);
+        var payment = await billing.PaymentForAsync(order, cancellationToken);
+        return ServiceResult<PublicOrderDto>.Ok(await MapPublic(order, houseName, payment, cancellationToken));
     }
 
     public async Task<ServiceResult<TokenBoardDto>> GetPublicBoardAsync(string restaurantCode, CancellationToken cancellationToken)
@@ -455,9 +481,10 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             order.TableName,
             order.GuestName,
             order.CreatedAt,
-            order.Lines.Select(line => new TicketLineDto(line.ItemName, line.VariantName, line.AddonSummary, line.Quantity, line.UnitPrice)).ToList());
+            order.Lines.Select(line => new TicketLineDto(line.ItemName, line.VariantName, line.AddonSummary, line.Quantity, line.UnitPrice)).ToList(),
+            order.PlayDiscountPercent);
 
-    private static PublicOrderDto MapPublic(GuestOrder order, string restaurantName, GuestPaymentDto? payment) =>
+    private async Task<PublicOrderDto> MapPublic(GuestOrder order, string restaurantName, GuestPaymentDto? payment, CancellationToken cancellationToken) =>
         new(
             order.Id,
             order.RestaurantId,
@@ -470,7 +497,22 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             payment?.BillNumber,
             payment?.Total,
             payment?.Status,
-            payment?.QrPng);
+            payment?.QrPng,
+            order.PlayDiscountPercent,
+            await CanPlay(order, cancellationToken));
+
+    private async Task<bool> CanPlay(GuestOrder order, CancellationToken cancellationToken) =>
+        order.PlayDiscountPercent is null
+        && order.Status is OrderStatuses.Preparing or OrderStatuses.Ready
+        && await access.IsOn(order.RestaurantId, ModuleCodes.Play, cancellationToken);
+
+    public static int PlayPercent(int score) => score switch
+    {
+        >= 200 => 15,
+        >= 100 => 10,
+        >= 50 => 5,
+        _ => 0
+    };
 }
 
 public static class IndiaClock

@@ -6,6 +6,7 @@ import { Api } from '../core/api.service';
 import { errorMessage } from '../core/http-error';
 import { LiveService } from '../core/live.service';
 import { PublicDish, PublicOrder, PublicTable } from '../core/models';
+import { ThaliGame } from './thali';
 import { apiOrigin } from '../../environments/environment';
 
 interface CartLine {
@@ -21,7 +22,7 @@ interface CartLine {
 
 @Component({
   selector: 'app-guest',
-  imports: [FormsModule, CurrencyPipe],
+  imports: [FormsModule, CurrencyPipe, ThaliGame],
   templateUrl: './guest.html',
 })
 export class GuestPage {
@@ -31,6 +32,7 @@ export class GuestPage {
   readonly order = signal<PublicOrder | null>(null);
   readonly cart = signal<CartLine[]>([]);
   readonly cartOpen = signal(false);
+  readonly playing = signal(false);
   readonly error = signal<string | null>(null);
   readonly guestName = signal('');
   readonly choices = signal<Record<string, { variantId?: string; addonIds: string[] }>>({});
@@ -136,7 +138,24 @@ export class GuestPage {
 
   @HostListener('document:keydown.escape')
   closeOnEscape() {
+    if (this.playing()) {
+      this.playing.set(false);
+      return;
+    }
     this.cartOpen.set(false);
+  }
+
+  claimPlay(score: number) {
+    const order = this.order();
+    if (!order) return;
+    this.api.claimPlay(order.id, score).subscribe({
+      next: (saved) => {
+        this.order.set(saved);
+        this.playing.set(false);
+        this.error.set(null);
+      },
+      error: (error) => this.error.set(errorMessage(error)),
+    });
   }
 
   pay(ticket: PublicOrder) {

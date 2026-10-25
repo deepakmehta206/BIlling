@@ -627,6 +627,12 @@ namespace Billing.Infrastructure.Persistence.Migrations
                         .HasMaxLength(240)
                         .HasColumnType("nvarchar(240)");
 
+                    b.Property<int?>("PlayDiscountPercent")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlayScore")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("RestaurantId")
                         .HasColumnType("uniqueidentifier");
 

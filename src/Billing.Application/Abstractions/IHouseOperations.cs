@@ -25,5 +25,6 @@ public interface IFloorService
     Task<ServiceResult<PublicTableDto>> GetPublicTableAsync(string qrToken, CancellationToken cancellationToken);
     Task<ServiceResult<PublicOrderDto>> PlacePublicOrderAsync(string qrToken, PlaceOrderRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<PublicOrderDto>> GetPublicOrderAsync(Guid orderId, CancellationToken cancellationToken);
+    Task<ServiceResult<PublicOrderDto>> ClaimPlayAsync(Guid orderId, ClaimPlayRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<TokenBoardDto>> GetPublicBoardAsync(string restaurantCode, CancellationToken cancellationToken);
 }

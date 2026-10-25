@@ -1,0 +1,39 @@
+<section class="thali">
+  <div class="thali-play" [class.on]="screen() === 'game'">
+    <canvas #cv (pointerdown)="aim($event)" (pointermove)="aim($event)"></canvas>
+    <div class="thali-hud">
+      <span>{{ score() }}</span>
+      <span>{{ lives() }} lives</span>
+      <span>{{ seconds() }}s</span>
+    </div>
+    <button type="button" class="btn solid" (click)="stop()">Food is here</button>
+  </div>
+
+  @if (screen() === 'start') {
+    <div class="thali-card">
+      <p class="eyebrow">{{ houseName() }}</p>
+      <h2>Thali catch</h2>
+      <p>Table {{ tableName() }}. Catch the dishes while the kitchen cooks.</p>
+      <ul>
+        @for (tier of tiers; track tier.minScore; let index = $index) {
+          <li><span>{{ band(index) }}</span><strong>{{ tier.discount }}%</strong></li>
+        }
+      </ul>
+      <button type="button" class="btn solid" (click)="start()">Play</button>
+      <button type="button" class="btn ghost" (click)="close()">Back to the token</button>
+    </div>
+  }
+
+  @if (screen() === 'over') {
+    <div class="thali-card">
+      <p class="eyebrow">Table {{ tableName() }}</p>
+      <h2>{{ discountFor(best()) }}% off</h2>
+      <p>This round {{ roundScore() }}. Best {{ best() }}.</p>
+      @if (nextTier(best()); as next) {
+        <p class="fine">{{ next.minScore - best() }} more points reaches {{ next.discount }}%.</p>
+      }
+      <button type="button" class="btn solid" (click)="claim()">Keep this discount</button>
+      <button type="button" class="btn ghost" (click)="again()">Play again</button>
+    </div>
+  }
+</section>

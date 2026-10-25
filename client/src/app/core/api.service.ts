@@ -143,6 +143,10 @@ export class Api {
     return this.http.get<PublicOrder>(`${this.base}/public/orders/${id}`);
   }
 
+  claimPlay(orderId: string, score: number) {
+    return this.http.post<PublicOrder>(`${this.base}/public/orders/${orderId}/play`, { score });
+  }
+
   tokenBoard(code: string) {
     return this.http.get<TokenBoard>(`${this.base}/public/board/${code}`);
   }

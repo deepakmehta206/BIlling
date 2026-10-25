@@ -923,6 +923,17 @@ input.when-field { height: 48px; line-height: 46px; padding: 0 40px 0 14px; curs
 .cart-card input { height: 48px; line-height: 46px; padding: 0 14px; margin: 0; }
 .cart-card .btn.solid { height: 48px; width: 100%; }
 .guest-token { min-height: 80vh; display: grid; align-content: center; text-align: center; gap: 8px; }
+.thali { position: fixed; inset: 0; z-index: 60; background: var(--cream); display: grid; place-items: center; padding: 24px; }
+.thali-card { width: min(420px, 100%); background: var(--paper); border: 1px solid var(--line); border-radius: 24px; padding: 22px; display: grid; gap: 12px; }
+.thali-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.thali-card li { display: flex; justify-content: space-between; }
+.thali-card .btn { height: 48px; width: 100%; }
+.thali-play { display: none; position: absolute; inset: 0; background: #fff8ef; }
+.thali-play.on { display: block; }
+.thali-play canvas { width: 100%; height: 100%; touch-action: none; display: block; }
+.thali-hud { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+.thali-hud span { background: #fffaf4; border-radius: 999px; padding: 6px 12px; font-weight: 700; }
+.thali-play .btn { position: absolute; right: 12px; bottom: 12px; }
 .guest-token h1 { font-size: 8rem; line-height: 0.9; }
 .status-pill { justify-self: center; background: #fff4df; color: #9a4e08; border-radius: 999px; padding: 6px 14px; font-weight: 650; }
 

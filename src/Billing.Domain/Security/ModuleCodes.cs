@@ -14,6 +14,7 @@ public static class ModuleCodes
     public const string Reports = "REPORTS";
     public const string WhatsApp = "WHATSAPP";
     public const string Upi = "UPI";
+    public const string Play = "PLAY";
 
     public static readonly IReadOnlyList<ModuleDefinition> All =
     [
@@ -28,7 +29,8 @@ public static class ModuleCodes
         new(Hrms, "HRMS", "Employees, roles and leave.", 9, false),
         new(Attendance, "Attendance", "Check-in, shifts and late marks.", 10, false),
         new(WhatsApp, "WhatsApp", "Owner gets the bill on WhatsApp.", 11, false),
-        new(Upi, "UPI QR", "Guest pays from a dynamic UPI QR.", 12, false)
+        new(Upi, "UPI QR", "Guest pays from a dynamic UPI QR.", 12, false),
+        new(Play, "Table play", "Guest plays while the food cooks and wins a discount on the token.", 13, false)
     ];
 }
 

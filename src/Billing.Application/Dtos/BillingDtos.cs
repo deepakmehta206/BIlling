@@ -11,7 +11,8 @@ public sealed record OpenTicketDto(
     decimal Subtotal,
     IReadOnlyList<BillLineDto> Lines,
     string? QrPng,
-    decimal Payable);
+    decimal Payable,
+    int? PlayDiscountPercent);
 
 public sealed record GuestPaymentDto(
     Guid? BillId,
