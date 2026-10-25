@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
@@ -24,6 +24,11 @@ export class FloorPage {
   readonly selected = signal<FloorTable | null>(null);
   readonly error = signal<string | null>(null);
   readonly moment = signal(this.localInput(new Date()));
+  readonly whenOpen = signal(false);
+  readonly calCursor = signal(this.startOfMonth(new Date()));
+  readonly weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  readonly hours = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  readonly minutes = Array.from({ length: 60 }, (_, index) => index);
   readonly tableName = signal('');
   readonly seats = signal(4);
   readonly section = signal('Hall');
@@ -174,6 +179,113 @@ export class FloorPage {
     this.load();
   }
 
+  whenLabel() {
+    return new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+      .format(this.momentDate())
+      .replace(',', ' ·');
+  }
+
+  monthLabel() {
+    return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(this.calCursor());
+  }
+
+  days() {
+    const cursor = this.calCursor();
+    const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const offset = (first.getDay() + 6) % 7;
+    const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1 - offset);
+    const selected = this.momentDate();
+    const today = new Date();
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      return {
+        key: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+        label: date.getDate(),
+        inMonth: date.getMonth() === cursor.getMonth(),
+        selected: this.sameDay(date, selected),
+        today: this.sameDay(date, today),
+        date,
+      };
+    });
+  }
+
+  hour12() {
+    return this.momentDate().getHours() % 12 || 12;
+  }
+
+  isPm() {
+    return this.momentDate().getHours() >= 12;
+  }
+
+  minuteNow() {
+    return this.momentDate().getMinutes();
+  }
+
+  pad2(value: number) {
+    return String(value).padStart(2, '0');
+  }
+
+  onWhenClick(event: Event) {
+    event.stopPropagation();
+    const target = event.target as HTMLElement;
+    if (target.closest('.when-panel') || !target.closest('.when-field')) return;
+    this.whenOpen.update((open) => !open);
+    if (!this.whenOpen()) return;
+    const selected = this.momentDate();
+    this.calCursor.set(new Date(selected.getFullYear(), selected.getMonth(), 1));
+    this.frameClock();
+  }
+
+  shiftMonth(delta: number) {
+    const cursor = this.calCursor();
+    this.calCursor.set(new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1));
+  }
+
+  chooseDay(date: Date) {
+    const next = new Date(date);
+    const current = this.momentDate();
+    next.setHours(current.getHours(), current.getMinutes(), 0, 0);
+    this.calCursor.set(new Date(next.getFullYear(), next.getMonth(), 1));
+    this.showAt(this.localInput(next));
+  }
+
+  chooseHour(hour: number) {
+    const next = this.momentDate();
+    next.setHours((hour % 12) + (this.isPm() ? 12 : 0), next.getMinutes(), 0, 0);
+    this.showAt(this.localInput(next));
+  }
+
+  chooseMinute(minute: number) {
+    const next = this.momentDate();
+    next.setMinutes(minute, 0, 0);
+    this.showAt(this.localInput(next));
+  }
+
+  setPeriod(pm: boolean) {
+    const next = this.momentDate();
+    const hour = next.getHours() % 12;
+    next.setHours(pm ? hour + 12 : hour, next.getMinutes(), 0, 0);
+    this.showAt(this.localInput(next));
+  }
+
+  @HostListener('document:click')
+  closeWhen() {
+    this.whenOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeWhenOnEscape() {
+    this.whenOpen.set(false);
+  }
+
   private load() {
     const id = this.desk.activeId();
     if (!id) return;
@@ -200,5 +312,29 @@ export class FloorPage {
   private localInput(date: Date) {
     const pad = (value: number) => String(value).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  private momentDate() {
+    const parsed = new Date(this.moment());
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+
+  private startOfMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  private sameDay(left: Date, right: Date) {
+    return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
+  }
+
+  private frameClock() {
+    setTimeout(() => {
+      document.querySelectorAll('.clock .on').forEach((node) => {
+        const el = node as HTMLElement;
+        const col = el.parentElement;
+        if (!col) return;
+        col.scrollTop = el.offsetTop - col.clientHeight / 2 + el.clientHeight / 2;
+      });
+    });
   }
 }

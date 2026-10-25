@@ -729,6 +729,57 @@ select, .house-pick select {
 .dot.nonveg { color: #9d3a32; background: #9d3a32; }
 .dot.egg { color: #c48a12; background: #c48a12; }
 
+.when-label { flex: 0 0 280px; width: 280px; }
+.when { position: relative; display: block; }
+.when.open { z-index: 50; }
+input.when-field { height: 48px; padding: 0 40px 0 14px; cursor: pointer; }
+.when::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 18px;
+  width: 8px;
+  height: 8px;
+  border-right: 1.7px solid #3c2f27;
+  border-bottom: 1.7px solid #3c2f27;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.when.open::after { top: 22px; transform: rotate(225deg); }
+.when-panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 300px;
+  padding: 14px;
+  background: #fffaf4;
+  border: 1px solid rgba(28, 20, 16, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(28, 20, 16, 0.14);
+}
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-head strong { font-family: Fraunces, Georgia, serif; font-weight: 560; }
+.cal-head button, .cal-grid button, .clock-col button {
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 650;
+}
+.cal-head button { width: 32px; height: 32px; }
+.cal-head button:hover, .cal-grid button:hover:not(.on), .clock-col button:hover:not(.on) { background: #f6efe4; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-dow { text-align: center; color: var(--muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.04em; }
+.cal-grid button { height: 34px; }
+.cal-grid button.out { color: var(--muted); font-weight: 500; }
+.cal-grid button.today:not(.on) { box-shadow: inset 0 0 0 1.5px #e07a1a; }
+.cal-grid button.on, .clock-col button.on { background: #3d2b22; color: #fffaf4; }
+.when-panel .fine { margin: 12px 0 6px; }
+.clock { display: grid; grid-template-columns: 1fr 1fr 64px; gap: 8px; }
+.clock-col { max-height: 168px; overflow: auto; display: grid; gap: 4px; align-content: start; }
+.clock-col button { height: 34px; }
+
 .floor-layout { display: grid; grid-template-columns: 1.4fr 0.7fr; gap: 16px; align-items: start; }
 .floor-room {
   position: relative;

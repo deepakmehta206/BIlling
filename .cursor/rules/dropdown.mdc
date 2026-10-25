@@ -1,0 +1,25 @@
+---
+description: Aangan dropdowns use the menu pick list, not a native select
+alwaysApply: true
+---
+
+# Dropdowns
+
+Every choice list uses the menu pick. Do not add a `<select>`. The closed control matches a text field: 48px, radius 14px, paper background, saffron focus ring. The open list is cream, hover `#f6efe4`, selected row `#3d2b22` with cream text. No operating-system blue.
+
+Styles already live in `client/src/styles.scss` (`.pick`, `.pick-btn`, `.pick-list`). Do not copy them into a component style file. A field beside Price, or any other 48px control, stays on the same row and the same height. Food type keeps the veg, non-veg, and egg dot.
+
+```html
+<span class="pick" [class.open]="openPick() === 'category'" (click)="$event.stopPropagation()">
+  <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'category'" (click)="togglePick('category')">{{ categoryLabel() }}</button>
+  @if (openPick() === 'category') {
+    <ul class="pick-list">
+      @for (category of categories; track category.id) {
+        <li><button type="button" [class.on]="id === category.id" (click)="choose(category.id)">{{ category.name }}</button></li>
+      }
+    </ul>
+  }
+</span>
+```
+
+Stop the click on the pick so the document listener does not close it in the same turn. Close on a choice, on outside click, and on Escape. One `openPick` signal per page. The sidebar house switcher is the only dark select; leave it until that screen is edited, then use this same list.

@@ -22,8 +22,44 @@
       <input type="number" min="1" [ngModel]="seats()" (ngModelChange)="seats.set(+$event)" name="seats" />
       <button class="btn solid" type="submit">Add table</button>
     </form>
-    <label>Show bookings at
-      <input type="datetime-local" [ngModel]="moment()" (ngModelChange)="showAt($event)" name="moment" />
+    <label class="when-label">Show bookings at
+      <span class="when" [class.open]="whenOpen()" (click)="onWhenClick($event)">
+        <input class="when-field" readonly [value]="whenLabel()" aria-haspopup="dialog" [attr.aria-expanded]="whenOpen()" />
+        @if (whenOpen()) {
+          <div class="when-panel" role="dialog" aria-label="Booking date and time">
+            <div class="cal-head">
+              <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+              <strong>{{ monthLabel() }}</strong>
+              <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+            </div>
+            <div class="cal-grid">
+              @for (name of weekdays; track name) {
+                <span class="cal-dow">{{ name }}</span>
+              }
+              @for (day of days(); track day.key) {
+                <button type="button" [class.out]="!day.inMonth" [class.on]="day.selected" [class.today]="day.today" (click)="chooseDay(day.date)">{{ day.label }}</button>
+              }
+            </div>
+            <p class="fine">Time</p>
+            <div class="clock">
+              <div class="clock-col">
+                @for (hour of hours; track hour) {
+                  <button type="button" [class.on]="hour12() === hour" (click)="chooseHour(hour)">{{ hour }}</button>
+                }
+              </div>
+              <div class="clock-col">
+                @for (minute of minutes; track minute) {
+                  <button type="button" [class.on]="minuteNow() === minute" (click)="chooseMinute(minute)">{{ pad2(minute) }}</button>
+                }
+              </div>
+              <div class="clock-col">
+                <button type="button" [class.on]="!isPm()" (click)="setPeriod(false)">AM</button>
+                <button type="button" [class.on]="isPm()" (click)="setPeriod(true)">PM</button>
+              </div>
+            </div>
+          </div>
+        }
+      </span>
     </label>
     <p class="legend"><span class="swatch available"></span> Empty <span class="swatch booked"></span> Booked <span class="swatch occupied"></span> Occupied <span class="swatch blocked"></span> Blocked</p>
   </div>
