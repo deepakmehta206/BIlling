@@ -5,10 +5,11 @@ using Billing.Domain.Entities;
 using Billing.Domain.Floor;
 using Billing.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace Billing.Infrastructure.Services;
 
-public class MenuService(AppDbContext db, IRequestContext request, HouseAccess access, IHouseLive live) : IMenuService
+public class MenuService(AppDbContext db, IRequestContext request, HouseAccess access, IHouseLive live, IHostEnvironment env) : IMenuService
 {
     public async Task<ServiceResult<MenuBoardDto>> GetAsync(Guid? restaurantId, CancellationToken cancellationToken)
     {
@@ -23,23 +24,40 @@ public class MenuService(AppDbContext db, IRequestContext request, HouseAccess a
             .Select(item => new MenuCategoryDto(item.Id, item.Name, item.SortOrder, item.IsActive, item.Items.Count()))
             .ToListAsync(cancellationToken);
 
-        var items = await db.MenuItems
+        var rows = await db.MenuItems
             .Where(item => item.RestaurantId == house.Value.Id)
             .OrderBy(item => item.SortOrder)
             .ThenBy(item => item.Name)
-            .Select(item => new MenuItemDto(
+            .Select(item => new
+            {
                 item.Id,
                 item.CategoryId,
-                item.Category.Name,
+                CategoryName = item.Category.Name,
                 item.Name,
                 item.Description,
                 item.FoodType,
                 item.Price,
                 item.IsAvailable,
                 item.SortOrder,
-                item.Variants.OrderBy(variant => variant.Price).Select(variant => new NamedPrice(variant.Id, variant.Name, variant.Price)).ToList(),
-                item.Addons.OrderBy(addon => addon.Name).Select(addon => new NamedPrice(addon.Id, addon.Name, addon.Price)).ToList()))
+                item.ImagePath,
+                Stamp = item.UpdatedAt ?? item.CreatedAt,
+                Variants = item.Variants.OrderBy(variant => variant.Price).Select(variant => new NamedPrice(variant.Id, variant.Name, variant.Price)).ToList(),
+                Addons = item.Addons.OrderBy(addon => addon.Name).Select(addon => new NamedPrice(addon.Id, addon.Name, addon.Price)).ToList()
+            })
             .ToListAsync(cancellationToken);
+        var items = rows.Select(item => new MenuItemDto(
+            item.Id,
+            item.CategoryId,
+            item.CategoryName,
+            item.Name,
+            item.Description,
+            item.FoodType,
+            item.Price,
+            item.IsAvailable,
+            item.SortOrder,
+            Photo(item.ImagePath, item.Stamp),
+            item.Variants,
+            item.Addons)).ToList();
 
         return ServiceResult<MenuBoardDto>.Ok(new MenuBoardDto(categories, items));
     }
@@ -123,8 +141,8 @@ public class MenuService(AppDbContext db, IRequestContext request, HouseAccess a
             return ServiceResult<MenuItemDto>.Fail(400, "Dish name needs at least 2 characters.");
         if (!FoodTypes.Known(food))
             return ServiceResult<MenuItemDto>.Fail(400, "Choose Veg, NonVeg or Egg.");
-        if (body.Price < 0 || body.Price > 100000)
-            return ServiceResult<MenuItemDto>.Fail(400, "Price looks wrong.");
+        if (!MenuPrice(body.Price))
+            return ServiceResult<MenuItemDto>.Fail(400, "Price can have 4 digits and 2 decimals, up to 9999.99.");
 
         var category = await db.MenuCategories.FirstOrDefaultAsync(item => item.Id == body.CategoryId && item.RestaurantId == house.Value.Id, cancellationToken);
         if (category is null)
@@ -158,6 +176,10 @@ public class MenuService(AppDbContext db, IRequestContext request, HouseAccess a
         item.Price = body.Price;
         item.IsAvailable = body.IsAvailable;
         item.SortOrder = body.SortOrder;
+        var image = StoreImage(item.Id, body.ImageData, body.RemoveImage, item.ImagePath);
+        if (!image.Succeeded)
+            return ServiceResult<MenuItemDto>.Fail(400, image.Error ?? "The photo could not be saved.");
+        item.ImagePath = image.Path;
 
         foreach (var variant in body.Variants ?? [])
         {
@@ -202,29 +224,105 @@ public class MenuService(AppDbContext db, IRequestContext request, HouseAccess a
         return ServiceResult<MessageDto>.Ok(new MessageDto($"{item.Name} was archived."));
     }
 
-    private async Task<MenuItemDto> LoadItem(Guid id, CancellationToken cancellationToken) =>
-        await db.MenuItems.Where(item => item.Id == id).Select(item => new MenuItemDto(
+    private async Task<MenuItemDto> LoadItem(Guid id, CancellationToken cancellationToken)
+    {
+        var item = await db.MenuItems.Where(row => row.Id == id).Select(row => new
+        {
+            row.Id,
+            row.CategoryId,
+            CategoryName = row.Category.Name,
+            row.Name,
+            row.Description,
+            row.FoodType,
+            row.Price,
+            row.IsAvailable,
+            row.SortOrder,
+            row.ImagePath,
+            Stamp = row.UpdatedAt ?? row.CreatedAt,
+            Variants = row.Variants.OrderBy(variant => variant.Price).Select(variant => new NamedPrice(variant.Id, variant.Name, variant.Price)).ToList(),
+            Addons = row.Addons.OrderBy(addon => addon.Name).Select(addon => new NamedPrice(addon.Id, addon.Name, addon.Price)).ToList()
+        }).FirstAsync(cancellationToken);
+
+        return new MenuItemDto(
             item.Id,
             item.CategoryId,
-            item.Category.Name,
+            item.CategoryName,
             item.Name,
             item.Description,
             item.FoodType,
             item.Price,
             item.IsAvailable,
             item.SortOrder,
-            item.Variants.OrderBy(variant => variant.Price).Select(variant => new NamedPrice(variant.Id, variant.Name, variant.Price)).ToList(),
-            item.Addons.OrderBy(addon => addon.Name).Select(addon => new NamedPrice(addon.Id, addon.Name, addon.Price)).ToList()))
-        .FirstAsync(cancellationToken);
+            Photo(item.ImagePath, item.Stamp),
+            item.Variants,
+            item.Addons);
+    }
 
     private static string? PriceError(IEnumerable<NamedPrice>? rows)
     {
         foreach (var row in rows ?? [])
         {
-            if (row.Price < 0 || row.Price > 100000)
-                return "A variant or add-on price looks wrong.";
+            if (string.IsNullOrWhiteSpace(row.Name))
+                continue;
+            if (!MenuPrice(row.Price))
+                return "A size or add-on price can have 4 digits and 2 decimals, up to 9999.99.";
         }
 
         return null;
     }
+
+    private static bool MenuPrice(decimal value)
+    {
+        if (value < 0 || value > 9999.99m)
+            return false;
+
+        var scale = (decimal.GetBits(value)[3] >> 16) & 0x7F;
+        return scale <= 2;
+    }
+
+    private ImageSave StoreImage(Guid itemId, string? data, bool remove, string? current)
+    {
+        if (remove && string.IsNullOrWhiteSpace(data))
+        {
+            DeleteImage(current);
+            return new ImageSave(true, null, null);
+        }
+
+        if (string.IsNullOrWhiteSpace(data))
+            return new ImageSave(true, current, null);
+
+        byte[] bytes;
+        try
+        {
+            bytes = Convert.FromBase64String(data);
+        }
+        catch (FormatException)
+        {
+            return new ImageSave(false, current, "The photo could not be read.");
+        }
+
+        if (bytes.Length is < 32 or > 1_200_000 || bytes[0] != 0xFF || bytes[1] != 0xD8)
+            return new ImageSave(false, current, "Use a JPEG photo under 1 MB.");
+
+        var folder = Path.Combine(env.ContentRootPath, "menu-images");
+        Directory.CreateDirectory(folder);
+        File.WriteAllBytes(Path.Combine(folder, $"{itemId:N}.jpg"), bytes);
+        return new ImageSave(true, $"/menu/{itemId:N}.jpg", null);
+    }
+
+    private void DeleteImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !path.StartsWith("/menu/", StringComparison.Ordinal))
+            return;
+
+        var name = Path.GetFileName(path.Split('?')[0]);
+        var file = Path.Combine(env.ContentRootPath, "menu-images", name);
+        if (File.Exists(file))
+            File.Delete(file);
+    }
+
+    private static string? Photo(string? path, DateTime stamp) =>
+        path is null ? null : $"{path}?v={new DateTimeOffset(DateTime.SpecifyKind(stamp, DateTimeKind.Utc)).ToUnixTimeSeconds()}";
+
+    private sealed record ImageSave(bool Succeeded, string? Path, string? Error);
 }

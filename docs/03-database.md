@@ -34,7 +34,7 @@ If any code path calls a hard delete, `SaveChanges` converts it to `IsDeleted = 
 | Table | Holds |
 | --- | --- |
 | MenuCategories | Section of the menu, sort order, active flag |
-| MenuItems | Dish, food type, price, availability |
+| MenuItems | Dish, food type, price, photo path, availability |
 | ItemVariants | Size or portion and its price |
 | ItemAddons | Extra and its price |
 | DiningTables | Name, section, seats, floor position, status, QR token |

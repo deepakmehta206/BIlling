@@ -954,6 +954,10 @@ namespace Billing.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("nvarchar(16)");
 
+                    b.Property<string>("ImagePath")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 

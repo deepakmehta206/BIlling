@@ -45,28 +45,67 @@
       </div>
       <div class="fields">
         <label>Category
-          <select [ngModel]="editing().categoryId" (ngModelChange)="editing.set({ ...editing(), categoryId: $event })" name="categoryId">
-            @for (category of board()?.categories ?? []; track category.id) {
-              <option [value]="category.id">{{ category.name }}</option>
+          <span class="pick" [class.open]="openPick() === 'category'" (click)="$event.stopPropagation()">
+            <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'category'" (click)="togglePick('category')">{{ categoryLabel() }}</button>
+            @if (openPick() === 'category') {
+              <ul class="pick-list">
+                @for (category of board()?.categories ?? []; track category.id) {
+                  <li>
+                    <button type="button" [class.on]="editing().categoryId === category.id" (click)="chooseCategory(category.id)">{{ category.name }}</button>
+                  </li>
+                }
+              </ul>
             }
-          </select>
+          </span>
         </label>
         <label>Name
           <input [ngModel]="editing().name" (ngModelChange)="editing.set({ ...editing(), name: $event })" name="name" />
         </label>
         <label>Price
-          <input type="number" min="0" [ngModel]="editing().price" (ngModelChange)="editing.set({ ...editing(), price: +$event })" name="price" />
+          <span class="money" [class.bad]="editing().price && !moneyOk(editing().price)">
+            <span>₹</span>
+            <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="editing().price" (ngModelChange)="editing.set({ ...editing(), price: $event })" name="price" />
+          </span>
+          <span class="fine">Up to 9999.99</span>
         </label>
         <label>Type
-          <select [ngModel]="editing().foodType" (ngModelChange)="editing.set({ ...editing(), foodType: $event })" name="food">
-            <option>Veg</option>
-            <option>NonVeg</option>
-            <option>Egg</option>
-          </select>
+          <span class="pick" [class.open]="openPick() === 'food'" [class.veg]="editing().foodType === 'Veg'" [class.egg]="editing().foodType === 'Egg'" [class.nonveg]="editing().foodType === 'NonVeg'" (click)="$event.stopPropagation()">
+            <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'food'" (click)="togglePick('food')">
+              <span class="dot" [class.veg]="editing().foodType === 'Veg'" [class.egg]="editing().foodType === 'Egg'" [class.nonveg]="editing().foodType === 'NonVeg'"></span>
+              {{ foodLabel(editing().foodType) }}
+            </button>
+            @if (openPick() === 'food') {
+              <ul class="pick-list">
+                @for (food of foodTypes; track food.value) {
+                  <li>
+                    <button type="button" [class.on]="editing().foodType === food.value" (click)="chooseFood(food.value)">
+                      <span class="dot" [class.veg]="food.value === 'Veg'" [class.egg]="food.value === 'Egg'" [class.nonveg]="food.value === 'NonVeg'"></span>
+                      {{ food.label }}
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </span>
         </label>
         <label class="wide">Description
           <input [ngModel]="editing().description" (ngModelChange)="editing.set({ ...editing(), description: $event })" name="description" />
         </label>
+        <div class="wide photo-field">
+          <span>Photo</span>
+          @if (shownPhoto(); as src) {
+            <img class="dish-photo" [src]="src" alt="Dish photo" />
+          }
+          <div class="card-actions">
+            <label class="btn ghost tiny">
+              Upload
+              <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onPhoto($event)" />
+            </label>
+            @if (shownPhoto()) {
+              <button type="button" class="btn ghost tiny" (click)="clearPhoto()">Remove photo</button>
+            }
+          </div>
+        </div>
         <label class="check">
           <input type="checkbox" [ngModel]="editing().isAvailable" (ngModelChange)="editing.set({ ...editing(), isAvailable: $event })" name="available" />
           Available to order
@@ -78,7 +117,10 @@
           @for (row of editing().variants; track $index) {
             <div class="inline-add">
               <input [ngModel]="row.name" (ngModelChange)="row.name = $event" [name]="'vname' + $index" placeholder="Half" />
-              <input type="number" [ngModel]="row.price" (ngModelChange)="row.price = +$event" [name]="'vprice' + $index" />
+              <span class="money" [class.bad]="row.price && !moneyOk(row.price)">
+                <span>₹</span>
+                <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="row.price" (ngModelChange)="row.price = $event" [name]="'vprice' + $index" />
+              </span>
             </div>
           }
           <button type="button" class="btn ghost tiny" (click)="addRow('variants')">Add size</button>
@@ -88,7 +130,10 @@
           @for (row of editing().addons; track $index) {
             <div class="inline-add">
               <input [ngModel]="row.name" (ngModelChange)="row.name = $event" [name]="'aname' + $index" placeholder="Extra cheese" />
-              <input type="number" [ngModel]="row.price" (ngModelChange)="row.price = +$event" [name]="'aprice' + $index" />
+              <span class="money" [class.bad]="row.price && !moneyOk(row.price)">
+                <span>₹</span>
+                <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="row.price" (ngModelChange)="row.price = $event" [name]="'aprice' + $index" />
+              </span>
             </div>
           }
           <button type="button" class="btn ghost tiny" (click)="addRow('addons')">Add extra</button>
@@ -103,18 +148,29 @@
       <h2>{{ category.name }}</h2>
       @for (item of itemsFor(category.id); track item.id) {
         <article class="dish-card" [class.muted-card]="!item.isAvailable">
-          <div class="dish-top">
-            <span class="dot" [class.veg]="item.foodType === 'Veg'" [class.egg]="item.foodType === 'Egg'" [class.nonveg]="item.foodType === 'NonVeg'"></span>
-            <strong>{{ item.name }}</strong>
-            <em>{{ item.price | currency: 'INR' : 'symbol' : '1.0-0' }}</em>
-          </div>
-          @if (item.description) { <p>{{ item.description }}</p> }
-          @if (item.variants.length) {
-            <p class="fine">{{ sizeLine(item) }}</p>
+          @if (photo(item.imageUrl); as src) {
+            <img class="dish-photo" [src]="src" [alt]="item.name" />
+          } @else {
+            <div class="dish-photo empty-photo" aria-hidden="true"></div>
           }
-          <div class="card-actions">
-            <button type="button" class="btn ghost tiny" (click)="edit(item)">Edit</button>
-            <button type="button" class="btn ghost tiny" (click)="removeItem(item.id)">Archive</button>
+          <div class="dish-body">
+            <div class="dish-top">
+              <span class="dot" [class.veg]="item.foodType === 'Veg'" [class.egg]="item.foodType === 'Egg'" [class.nonveg]="item.foodType === 'NonVeg'"></span>
+              <strong>{{ item.name }}</strong>
+            </div>
+            <p class="price-tag">{{ item.price | currency: 'INR' : 'symbol' : '1.2-2' }}</p>
+            @if (item.description) { <p>{{ item.description }}</p> }
+            @if (item.variants.length) {
+              <p class="fine">
+                @for (row of item.variants; track $index) {
+                  {{ row.name }} {{ row.price | currency: 'INR' : 'symbol' : '1.2-2' }}@if (!$last) { · }
+                }
+              </p>
+            }
+            <div class="card-actions">
+              <button type="button" class="btn ghost tiny" (click)="edit(item)">Edit</button>
+              <button type="button" class="btn ghost tiny" (click)="removeItem(item.id)">Archive</button>
+            </div>
           </div>
         </article>
       }

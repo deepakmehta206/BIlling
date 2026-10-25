@@ -31,17 +31,20 @@
         <h2>{{ category.name }}</h2>
         @for (item of category.items; track item.id) {
           <article class="guest-dish">
+            @if (photo(item.imageUrl); as src) {
+              <img class="dish-photo" [src]="src" [alt]="item.name" />
+            }
             <div class="dish-top">
               <span class="dot" [class.veg]="item.foodType === 'Veg'" [class.egg]="item.foodType === 'Egg'" [class.nonveg]="item.foodType === 'NonVeg'"></span>
               <strong>{{ item.name }}</strong>
-              <em>{{ item.price | currency: 'INR' : 'symbol' : '1.0-0' }}</em>
             </div>
+            <p class="price-tag">{{ item.price | currency: 'INR' : 'symbol' : '1.2-2' }}</p>
             @if (item.description) { <p>{{ item.description }}</p> }
             @if (item.variants.length) {
               <div class="choice-row">
                 @for (variant of item.variants; track variant.id) {
                   <button type="button" class="chip" [class.on]="choice(item).variantId === variant.id" (click)="pickVariant(item, variant.id || '')">
-                    {{ variant.name }} {{ variant.price | currency: 'INR' : 'symbol' : '1.0-0' }}
+                    {{ variant.name }} {{ variant.price | currency: 'INR' : 'symbol' : '1.2-2' }}
                   </button>
                 }
               </div>

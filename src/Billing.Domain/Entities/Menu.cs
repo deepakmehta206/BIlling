@@ -21,6 +21,7 @@ public class MenuItem : AuditableEntity
     public string? Description { get; set; }
     public string FoodType { get; set; } = "Veg";
     public decimal Price { get; set; }
+    public string? ImagePath { get; set; }
     public bool IsAvailable { get; set; } = true;
     public int SortOrder { get; set; }
     public ICollection<ItemVariant> Variants { get; set; } = new List<ItemVariant>();

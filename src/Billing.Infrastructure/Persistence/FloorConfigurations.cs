@@ -24,6 +24,7 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.Property(x => x.Description).HasMaxLength(400);
         builder.Property(x => x.FoodType).HasMaxLength(16).IsRequired();
         builder.Property(x => x.Price).HasPrecision(10, 2);
+        builder.Property(x => x.ImagePath).HasMaxLength(80);
         builder.HasOne(x => x.Category).WithMany(x => x.Items).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
     }
 }

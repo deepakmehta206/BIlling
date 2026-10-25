@@ -131,6 +131,7 @@ export interface MenuItem {
   price: number;
   isAvailable: boolean;
   sortOrder: number;
+  imageUrl: string | null;
   variants: NamedPrice[];
   addons: NamedPrice[];
 }
@@ -191,6 +192,7 @@ export interface PublicDish {
   description: string | null;
   foodType: string;
   price: number;
+  imageUrl: string | null;
   variants: NamedPrice[];
   addons: NamedPrice[];
 }

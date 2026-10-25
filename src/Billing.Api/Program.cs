@@ -5,6 +5,7 @@ using Billing.Api.Security;
 using Billing.Application.Abstractions;
 using Billing.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,6 +88,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseCors("web");
+var menuImages = Path.Combine(app.Environment.ContentRootPath, "menu-images");
+Directory.CreateDirectory(menuImages);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(menuImages),
+    RequestPath = "/menu"
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -263,20 +263,29 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             .Select(item => new
             {
                 item.Category.Name,
-                Dish = new PublicDishDto(
-                    item.Id,
-                    item.Name,
-                    item.Description,
-                    item.FoodType,
-                    item.Price,
-                    item.Variants.OrderBy(variant => variant.Price).Select(variant => new NamedPrice(variant.Id, variant.Name, variant.Price)).ToList(),
-                    item.Addons.OrderBy(addon => addon.Name).Select(addon => new NamedPrice(addon.Id, addon.Name, addon.Price)).ToList())
+                item.Id,
+                item.Description,
+                item.FoodType,
+                item.Price,
+                item.ImagePath,
+                Stamp = item.UpdatedAt ?? item.CreatedAt,
+                DishName = item.Name,
+                Variants = item.Variants.OrderBy(variant => variant.Price).Select(variant => new NamedPrice(variant.Id, variant.Name, variant.Price)).ToList(),
+                Addons = item.Addons.OrderBy(addon => addon.Name).Select(addon => new NamedPrice(addon.Id, addon.Name, addon.Price)).ToList()
             })
             .ToListAsync(cancellationToken);
 
         var menu = items
             .GroupBy(item => item.Name)
-            .Select(group => new PublicCategoryDto(group.Key, group.Select(item => item.Dish).ToList()))
+            .Select(group => new PublicCategoryDto(group.Key, group.Select(item => new PublicDishDto(
+                item.Id,
+                item.DishName,
+                item.Description,
+                item.FoodType,
+                item.Price,
+                item.ImagePath is null ? null : $"{item.ImagePath}?v={new DateTimeOffset(DateTime.SpecifyKind(item.Stamp, DateTimeKind.Utc)).ToUnixTimeSeconds()}",
+                item.Variants,
+                item.Addons)).ToList()))
             .ToList();
 
         return ServiceResult<PublicTableDto>.Ok(new PublicTableDto(table.RestaurantId, restaurant.Name, restaurant.Code, table.Name, menu));

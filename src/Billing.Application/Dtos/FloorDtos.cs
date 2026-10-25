@@ -14,6 +14,7 @@ public sealed record MenuItemDto(
     decimal Price,
     bool IsAvailable,
     int SortOrder,
+    string? ImageUrl,
     IReadOnlyList<NamedPrice> Variants,
     IReadOnlyList<NamedPrice> Addons);
 
@@ -37,6 +38,8 @@ public sealed class SaveItemRequest
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; } = true;
     public int SortOrder { get; set; }
+    public string? ImageData { get; set; }
+    public bool RemoveImage { get; set; }
     public List<NamedPrice> Variants { get; set; } = [];
     public List<NamedPrice> Addons { get; set; } = [];
 }
@@ -112,6 +115,7 @@ public sealed record PublicDishDto(
     string? Description,
     string FoodType,
     decimal Price,
+    string? ImageUrl,
     IReadOnlyList<NamedPrice> Variants,
     IReadOnlyList<NamedPrice> Addons);
 

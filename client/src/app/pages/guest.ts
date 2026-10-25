@@ -6,6 +6,7 @@ import { Api } from '../core/api.service';
 import { errorMessage } from '../core/http-error';
 import { LiveService } from '../core/live.service';
 import { PublicDish, PublicOrder, PublicTable } from '../core/models';
+import { apiOrigin } from '../../environments/environment';
 
 interface CartLine {
   key: string;
@@ -53,6 +54,11 @@ export class GuestPage {
       }
     }, 1000);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
+  }
+
+  photo(path: string | null) {
+    if (!path) return null;
+    return path.startsWith('http') ? path : `${apiOrigin()}${path}`;
   }
 
   choice(item: PublicDish) {
