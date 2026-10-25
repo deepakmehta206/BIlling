@@ -651,6 +651,11 @@ select, .house-pick select {
 
 .inline-add input, .stack input, .stack select { margin-bottom: 8px; }
 .stack { display: grid; gap: 8px; }
+.stack .pick, .stack .when, .date-pair .when { width: 100%; }
+.date-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+.stack .when-field { margin: 0; }
+.stack input.grace { margin: 0; height: 48px; line-height: 46px; padding: 0 14px; }
+.date-pair label:last-child .when-panel { left: auto; right: 0; }
 .pair-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
 
 .dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 18px; }

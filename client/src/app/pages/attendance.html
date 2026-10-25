@@ -43,9 +43,63 @@
         <h2>Shifts</h2>
         <form class="stack" (ngSubmit)="saveShift()">
           <input [ngModel]="shiftName()" (ngModelChange)="shiftName.set($event)" name="shiftName" placeholder="Morning" />
-          <input type="time" [ngModel]="startsAt()" (ngModelChange)="startsAt.set($event)" name="starts" />
-          <input type="time" [ngModel]="endsAt()" (ngModelChange)="endsAt.set($event)" name="ends" />
-          <input type="number" min="0" max="90" [ngModel]="grace()" (ngModelChange)="grace.set(+$event)" name="grace" placeholder="Grace minutes" />
+          <div class="date-pair">
+            <label>Starts
+              <span class="when" [class.open]="open() === 'starts'" (click)="onOpen($event, 'starts')">
+                <input class="when-field" readonly [value]="timeLabel(startsAt())" aria-haspopup="dialog" [attr.aria-expanded]="open() === 'starts'" />
+                @if (open() === 'starts') {
+                  <div class="when-panel" role="dialog" aria-label="Starts">
+                    <p class="fine">Starts</p>
+                    <div class="clock">
+                      <div class="clock-col">
+                        @for (hour of hours; track hour) {
+                          <button type="button" [class.on]="hour12(startsAt()) === hour" (click)="chooseHour(hour)">{{ hour }}</button>
+                        }
+                      </div>
+                      <div class="clock-col">
+                        @for (minute of minutes; track minute) {
+                          <button type="button" [class.on]="minuteNow(startsAt()) === minute" (click)="chooseMinute(minute)">{{ pad2(minute) }}</button>
+                        }
+                      </div>
+                      <div class="clock-col">
+                        <button type="button" [class.on]="!isPm(startsAt())" (click)="setPeriod(false)">AM</button>
+                        <button type="button" [class.on]="isPm(startsAt())" (click)="setPeriod(true)">PM</button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </span>
+            </label>
+            <label>Ends
+              <span class="when" [class.open]="open() === 'ends'" (click)="onOpen($event, 'ends')">
+                <input class="when-field" readonly [value]="timeLabel(endsAt())" aria-haspopup="dialog" [attr.aria-expanded]="open() === 'ends'" />
+                @if (open() === 'ends') {
+                  <div class="when-panel" role="dialog" aria-label="Ends">
+                    <p class="fine">Ends</p>
+                    <div class="clock">
+                      <div class="clock-col">
+                        @for (hour of hours; track hour) {
+                          <button type="button" [class.on]="hour12(endsAt()) === hour" (click)="chooseHour(hour)">{{ hour }}</button>
+                        }
+                      </div>
+                      <div class="clock-col">
+                        @for (minute of minutes; track minute) {
+                          <button type="button" [class.on]="minuteNow(endsAt()) === minute" (click)="chooseMinute(minute)">{{ pad2(minute) }}</button>
+                        }
+                      </div>
+                      <div class="clock-col">
+                        <button type="button" [class.on]="!isPm(endsAt())" (click)="setPeriod(false)">AM</button>
+                        <button type="button" [class.on]="isPm(endsAt())" (click)="setPeriod(true)">PM</button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </span>
+            </label>
+          </div>
+          <label>Grace
+            <input class="grace" inputmode="numeric" autocomplete="off" placeholder="0–90" [value]="grace() > 0 ? grace() : ''" (input)="setGrace($event)" />
+          </label>
           <button class="btn solid" type="submit">Add shift</button>
         </form>
         <ul class="plain">
@@ -55,16 +109,26 @@
         </ul>
         <h3>Assign</h3>
         <form class="stack" (ngSubmit)="assign()">
-          <select [ngModel]="assignUser()" (ngModelChange)="assignUser.set($event)" name="person">
-            @for (row of board()?.rows ?? []; track row.userId) {
-              <option [value]="row.userId">{{ row.fullName }}</option>
+          <span class="pick" [class.open]="open() === 'person'" (click)="onOpen($event, 'person')">
+            <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'person'">{{ personLabel() }}</button>
+            @if (open() === 'person') {
+              <ul class="pick-list">
+                @for (row of board()?.rows ?? []; track row.userId) {
+                  <li><button type="button" [class.on]="assignUser() === row.userId" (click)="choosePerson(row.userId)">{{ row.fullName }}</button></li>
+                }
+              </ul>
             }
-          </select>
-          <select [ngModel]="assignShift()" (ngModelChange)="assignShift.set($event)" name="shift">
-            @for (shift of board()?.shifts ?? []; track shift.id) {
-              <option [value]="shift.id">{{ shift.name }}</option>
+          </span>
+          <span class="pick" [class.open]="open() === 'shift'" (click)="onOpen($event, 'shift')">
+            <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'shift'">{{ shiftLabel() }}</button>
+            @if (open() === 'shift') {
+              <ul class="pick-list">
+                @for (shift of board()?.shifts ?? []; track shift.id) {
+                  <li><button type="button" [class.on]="assignShift() === shift.id" (click)="chooseShift(shift.id)">{{ shift.name }}</button></li>
+                }
+              </ul>
             }
-          </select>
+          </span>
           <button class="btn solid" type="submit">Assign</button>
         </form>
       </div>

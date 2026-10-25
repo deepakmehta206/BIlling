@@ -18,11 +18,16 @@
         <input [ngModel]="name()" (ngModelChange)="name.set($event)" name="name" placeholder="Full name" />
         <input [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" placeholder="Email" />
         <input [ngModel]="phone()" (ngModelChange)="phone.set($event)" name="phone" placeholder="Phone" />
-        <select [ngModel]="role()" (ngModelChange)="role.set($event)" name="role">
-          @for (role of board()?.roles ?? []; track role) {
-            <option [value]="role">{{ role }}</option>
+        <span class="pick" [class.open]="open() === 'role'" (click)="onOpen($event, 'role')">
+          <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'role'">{{ role() }}</button>
+          @if (open() === 'role') {
+            <ul class="pick-list">
+              @for (choice of board()?.roles ?? []; track choice) {
+                <li><button type="button" [class.on]="role() === choice" (click)="chooseRole(choice)">{{ choice }}</button></li>
+              }
+            </ul>
           }
-        </select>
+        </span>
         <input type="password" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" placeholder="Password" />
         <button class="btn solid" type="submit">Hire</button>
       </form>
@@ -47,11 +52,16 @@
         <form class="stack" (ngSubmit)="saveEdit()">
           <input [ngModel]="editName()" (ngModelChange)="editName.set($event)" name="editName" />
           <input [ngModel]="editPhone()" (ngModelChange)="editPhone.set($event)" name="editPhone" placeholder="Phone" />
-          <select [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" name="editRole">
-            @for (role of board()?.roles ?? []; track role) {
-              <option [value]="role">{{ role }}</option>
+          <span class="pick" [class.open]="open() === 'editRole'" (click)="onOpen($event, 'editRole')">
+            <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'editRole'">{{ editRole() }}</button>
+            @if (open() === 'editRole') {
+              <ul class="pick-list">
+                @for (choice of board()?.roles ?? []; track choice) {
+                  <li><button type="button" [class.on]="editRole() === choice" (click)="chooseEditRole(choice)">{{ choice }}</button></li>
+                }
+              </ul>
             }
-          </select>
+          </span>
           <label class="choice-row">
             <input type="checkbox" [ngModel]="editActive()" (ngModelChange)="editActive.set($event)" name="active" />
             Active login
@@ -65,18 +75,68 @@
     <div class="panel">
       <h2>Leave</h2>
       <form class="stack" (ngSubmit)="askLeave()">
-        <select [ngModel]="leaveUser()" (ngModelChange)="leaveUser.set($event)" name="leaveUser">
-          @for (person of board()?.employees ?? []; track person.id) {
-            <option [value]="person.id">{{ person.fullName }}</option>
+        <span class="pick" [class.open]="open() === 'person'" (click)="onOpen($event, 'person')">
+          <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'person'">{{ personLabel() }}</button>
+          @if (open() === 'person') {
+            <ul class="pick-list">
+              @for (person of board()?.employees ?? []; track person.id) {
+                <li><button type="button" [class.on]="leaveUser() === person.id" (click)="choosePerson(person.id)">{{ person.fullName }}</button></li>
+              }
+            </ul>
           }
-        </select>
-        <select [ngModel]="kind()" (ngModelChange)="kind.set($event)" name="kind">
-          <option value="Casual">Casual</option>
-          <option value="Sick">Sick</option>
-          <option value="Unpaid">Unpaid</option>
-        </select>
-        <input type="date" [ngModel]="from()" (ngModelChange)="from.set($event)" name="from" />
-        <input type="date" [ngModel]="to()" (ngModelChange)="to.set($event)" name="to" />
+        </span>
+        <span class="pick" [class.open]="open() === 'kind'" (click)="onOpen($event, 'kind')">
+          <button type="button" class="pick-btn" [attr.aria-expanded]="open() === 'kind'">{{ kind() }}</button>
+          @if (open() === 'kind') {
+            <ul class="pick-list">
+              @for (choice of kinds; track choice) {
+                <li><button type="button" [class.on]="kind() === choice" (click)="chooseKind(choice)">{{ choice }}</button></li>
+              }
+            </ul>
+          }
+        </span>
+        <div class="date-pair">
+          <label>From
+            <span class="when" [class.open]="open() === 'from'" (click)="onOpen($event, 'from')">
+              <input class="when-field" readonly [value]="dayLabel(from())" aria-haspopup="dialog" [attr.aria-expanded]="open() === 'from'" />
+              @if (open() === 'from') {
+                <div class="when-panel" role="dialog" aria-label="From">
+                  <div class="cal-head">
+                    <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+                    <strong>{{ monthLabel() }}</strong>
+                    <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+                  </div>
+                  <div class="cal-grid">
+                    @for (name of weekdays; track name) { <span class="cal-dow">{{ name }}</span> }
+                    @for (day of days(); track day.key) {
+                      <button type="button" [class.out]="!day.inMonth" [class.on]="day.selected" [class.today]="day.today" (click)="chooseDay(day.date)">{{ day.label }}</button>
+                    }
+                  </div>
+                </div>
+              }
+            </span>
+          </label>
+          <label>To
+            <span class="when" [class.open]="open() === 'to'" (click)="onOpen($event, 'to')">
+              <input class="when-field" readonly [value]="dayLabel(to())" aria-haspopup="dialog" [attr.aria-expanded]="open() === 'to'" />
+              @if (open() === 'to') {
+                <div class="when-panel" role="dialog" aria-label="To">
+                  <div class="cal-head">
+                    <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+                    <strong>{{ monthLabel() }}</strong>
+                    <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+                  </div>
+                  <div class="cal-grid">
+                    @for (name of weekdays; track name) { <span class="cal-dow">{{ name }}</span> }
+                    @for (day of days(); track day.key) {
+                      <button type="button" [class.out]="!day.inMonth" [class.on]="day.selected" [class.today]="day.today" (click)="chooseDay(day.date)">{{ day.label }}</button>
+                    }
+                  </div>
+                </div>
+              }
+            </span>
+          </label>
+        </div>
         <input [ngModel]="note()" (ngModelChange)="note.set($event)" name="note" placeholder="Note, optional" />
         <button class="btn solid" type="submit">Request leave</button>
       </form>

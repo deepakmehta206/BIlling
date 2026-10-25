@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../core/api.service';
 import { errorMessage } from '../core/http-error';
@@ -34,6 +34,10 @@ export class StaffPage {
   readonly editRole = signal('Waiter');
   readonly editActive = signal(true);
   readonly editPassword = signal('');
+  readonly open = signal<string | null>(null);
+  readonly calCursor = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  readonly weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  readonly kinds = ['Casual', 'Sick', 'Unpaid'];
 
   constructor() {
     const live = inject(LiveService);
@@ -161,6 +165,91 @@ export class StaffPage {
       });
   }
 
+  personLabel() {
+    return this.board()?.employees.find((person) => person.id === this.leaveUser())?.fullName ?? 'Choose a person';
+  }
+
+  dayLabel(value: string) {
+    return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(this.parseDay(value));
+  }
+
+  monthLabel() {
+    return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(this.calCursor());
+  }
+
+  days() {
+    const cursor = this.calCursor();
+    const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const offset = (first.getDay() + 6) % 7;
+    const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1 - offset);
+    const selected = this.parseDay(this.open() === 'to' ? this.to() : this.from());
+    const today = new Date();
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      return {
+        key: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+        label: date.getDate(),
+        inMonth: date.getMonth() === cursor.getMonth(),
+        selected: this.sameDay(date, selected),
+        today: this.sameDay(date, today),
+        date,
+      };
+    });
+  }
+
+  onOpen(event: Event, which: string) {
+    event.stopPropagation();
+    const target = event.target as HTMLElement;
+    if (target.closest('.pick-list') || target.closest('.when-panel')) return;
+    this.open.update((current) => (current === which ? null : which));
+    if (this.open() !== 'from' && this.open() !== 'to') return;
+    const selected = this.parseDay(this.open() === 'to' ? this.to() : this.from());
+    this.calCursor.set(new Date(selected.getFullYear(), selected.getMonth(), 1));
+  }
+
+  shiftMonth(delta: number) {
+    const cursor = this.calCursor();
+    this.calCursor.set(new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1));
+  }
+
+  chooseRole(role: string) {
+    this.role.set(role);
+    this.open.set(null);
+  }
+
+  chooseEditRole(role: string) {
+    this.editRole.set(role);
+    this.open.set(null);
+  }
+
+  choosePerson(id: string) {
+    this.leaveUser.set(id);
+    this.open.set(null);
+  }
+
+  chooseKind(kind: string) {
+    this.kind.set(kind);
+    this.open.set(null);
+  }
+
+  chooseDay(date: Date) {
+    const value = this.isoDay(date);
+    if (this.open() === 'from') this.from.set(value);
+    if (this.open() === 'to') this.to.set(value);
+    this.open.set(null);
+  }
+
+  @HostListener('document:click')
+  closeOpen() {
+    this.open.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeOnEscape() {
+    this.open.set(null);
+  }
+
   decide(leaveId: string, status: string) {
     const id = this.desk.activeId();
     if (!id) return;
@@ -171,6 +260,21 @@ export class StaffPage {
       },
       error: (error) => this.error.set(errorMessage(error)),
     });
+  }
+
+  private parseDay(value: string) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year || 2026, (month || 1) - 1, day || 1);
+  }
+
+  private isoDay(date: Date) {
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  private sameDay(left: Date, right: Date) {
+    return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
   }
 
   private day(offset: number) {
