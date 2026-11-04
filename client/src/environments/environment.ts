@@ -1,4 +1,5 @@
-const fallback = 'http://localhost:5254';
+//const fallback = 'http://localhost:5254';
+const fallback = 'https://portal.advanceticketnow.com/';
 
 function savedOrigin() {
   try {
