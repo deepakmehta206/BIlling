@@ -55,7 +55,10 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:4210",
                 "http://localhost",
                 "https://localhost",
-                "capacitor://localhost")
+                "capacitor://localhost",
+                "https://advanceticketnow.com",
+                "https://www.advanceticketnow.com",
+                "https://portal.advanceticketnow.com")
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
