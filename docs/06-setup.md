@@ -99,6 +99,24 @@ Open `http://localhost:4200`. The app calls `http://localhost:5254/api` (see `cl
 4. Open Attendance. Add a same-day shift, assign it, and check the person in. A check-in after the start plus grace is marked late.
 5. Audit shows `staff.hired`, `staff.leave_decided`, and `attendance.checked_in` with the IP.
 
+## Live host (myWindowsHosting)
+
+Use two sites:
+
+| Site | Role |
+| --- | --- |
+| `portal.advanceticketnow.com` | API only. Publish `Billing.Api`. Do **not** upload a `wwwroot` folder. |
+| `advanceticketnow.com` | Desk and guest QR. Upload the Angular build. |
+
+```powershell
+cd client
+npm run build
+```
+
+Copy everything in `client/dist/client/browser` (including `web.config`) into the main site root. That `web.config` rewrites `/t/...` and `/login` to `index.html`. The build calls the API at `https://portal.advanceticketnow.com`.
+
+Guest QR links use the desk domain (`location.origin`), so open Floor from `advanceticketnow.com` before printing.
+
 ## Phase 6 walk-through
 
 The web app on port 4200 stays the browser. The other two shells load the same screens.

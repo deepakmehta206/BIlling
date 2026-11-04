@@ -1,5 +1,5 @@
-//const fallback = 'http://localhost:5254';
-const fallback = 'https://portal.advanceticketnow.com';
+const localApi = 'http://localhost:5254';
+const liveApi = 'https://advanceticketnow.com';
 
 function savedOrigin() {
   try {
@@ -11,7 +11,20 @@ function savedOrigin() {
     // Storage is unavailable while the module is first evaluated.
   }
 
-  return fallback;
+  return defaultOrigin();
+}
+
+function defaultOrigin() {
+  if (typeof window === 'undefined') {
+    return localApi;
+  }
+
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return localApi;
+  }
+
+  return liveApi;
 }
 
 export const environment = {

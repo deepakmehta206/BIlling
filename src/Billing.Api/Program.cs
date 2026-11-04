@@ -90,8 +90,14 @@ app.Use(async (context, next) =>
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+var webRoot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var serveDesk = File.Exists(Path.Combine(webRoot, "index.html"));
+if (serveDesk)
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.UseCors("web");
 var menuImages = Path.Combine(app.Environment.ContentRootPath, "menu-images");
 Directory.CreateDirectory(menuImages);
@@ -104,5 +110,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<FloorHub>("/hubs/floor");
-app.MapFallbackToFile("index.html");
+if (serveDesk)
+    app.MapFallbackToFile("index.html");
 app.Run();
