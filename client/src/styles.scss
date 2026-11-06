@@ -837,6 +837,9 @@ input.when-field { height: 48px; line-height: 46px; padding: 0 40px 0 14px; curs
   gap: 2px;
   cursor: grab;
   background: white;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .table-chip strong { font-family: Fraunces, Georgia, serif; font-size: 1.2rem; }
 .table-chip span, .table-chip em { font-size: 0.75rem; font-style: normal; }

@@ -2,9 +2,9 @@
   <aside class="sidebar">
     <div class="brand-block">
       <div class="brand-row">
-        <a class="brand" routerLink="/" aria-label="Aangan">
-          <span class="mark">A</span>
-          <span class="brand-name">Aangan</span>
+        <a class="brand" routerLink="/" [attr.aria-label]="brandName()">
+          <span class="mark">{{ brandMark() }}</span>
+          <span class="brand-name">{{ brandName() }}</span>
         </a>
         <button type="button" class="nav-toggle" (click)="toggleNav()" [attr.aria-label]="collapsed() ? 'Expand menu' : 'Collapse menu'">
           <svg class="chev" [class.flip]="collapsed()" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6 8 12l6 6"/></svg>

@@ -30,6 +30,18 @@ export class ShellPage {
     });
   }
 
+  brandName() {
+    if (this.auth.isSuperAdmin()) {
+      return this.desk.name() || 'Aangan';
+    }
+    return this.auth.user()?.restaurantName || 'Aangan';
+  }
+
+  brandMark() {
+    const name = this.brandName().trim();
+    return (name[0] || 'A').toUpperCase();
+  }
+
   roleLabel() {
     const user = this.auth.user();
     if (!user) return '';

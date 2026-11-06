@@ -120,28 +120,39 @@ export class FloorPage {
 
   startDrag(event: PointerEvent, table: FloorTable) {
     const room = this.room()?.nativeElement;
-    if (!room) return;
+    const chip = event.currentTarget as HTMLElement;
+    if (!room || event.button > 0) return;
+    event.preventDefault();
+    chip.setPointerCapture(event.pointerId);
     const originX = event.clientX;
     const originY = event.clientY;
     this.dragged = false;
     const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== event.pointerId) return;
+      ev.preventDefault();
       if (Math.abs(ev.clientX - originX) + Math.abs(ev.clientY - originY) > 6) this.dragged = true;
       const rect = room.getBoundingClientRect();
       const posX = this.clamp(((ev.clientX - rect.left) / rect.width) * 100);
       const posY = this.clamp(((ev.clientY - rect.top) / rect.height) * 100);
       this.tables.update((rows) => rows.map((row) => (row.id === table.id ? { ...row, posX, posY } : row)));
     };
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== event.pointerId) return;
+      chip.removeEventListener('pointermove', move);
+      chip.removeEventListener('pointerup', up);
+      chip.removeEventListener('pointercancel', up);
+      if (chip.hasPointerCapture(event.pointerId)) {
+        chip.releasePointerCapture(event.pointerId);
+      }
       if (!this.dragged) return;
       const current = this.tables().find((row) => row.id === table.id);
       const id = this.desk.activeId();
       if (!current || !id) return;
       this.api.saveTable(id, current).subscribe({ error: (error) => this.error.set(errorMessage(error)) });
     };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
+    chip.addEventListener('pointermove', move);
+    chip.addEventListener('pointerup', up);
+    chip.addEventListener('pointercancel', up);
   }
 
   saveSelected(status?: string) {
