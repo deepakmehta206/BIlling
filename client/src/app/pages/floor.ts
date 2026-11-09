@@ -8,6 +8,7 @@ import { errorMessage } from '../core/http-error';
 import { HouseService } from '../core/house.service';
 import { LiveService } from '../core/live.service';
 import { FloorTable, Ticket } from '../core/models';
+import { OrderAlertService } from '../core/order-alert.service';
 import { ToastService } from '../core/toast.service';
 
 @Component({
@@ -18,6 +19,7 @@ import { ToastService } from '../core/toast.service';
 export class FloorPage {
   private readonly api = inject(Api);
   private readonly toasts = inject(ToastService);
+  private readonly alerts = inject(OrderAlertService);
   readonly desk = inject(HouseService);
   readonly room = viewChild<ElementRef<HTMLElement>>('room');
   readonly tables = signal<FloorTable[]>([]);
@@ -340,8 +342,12 @@ export class FloorPage {
       },
       error: (error) => this.error.set(errorMessage(error)),
     });
+    this.alerts.forHouse(id);
     this.api.tickets(id).subscribe({
-      next: (tickets) => this.tickets.set(tickets),
+      next: (tickets) => {
+        this.alerts.notice(tickets);
+        this.tickets.set(tickets);
+      },
       error: () => undefined,
     });
   }

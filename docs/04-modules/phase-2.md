@@ -31,7 +31,7 @@ A dish price, and each size or add-on price, can have 4 digits and 2 decimals, u
 
 The server prices every line. The guest page keeps the cart as one bar — item count, total, and Place order — so the menu stays visible. The dish list, quantities, and name open in a sheet. The saved price is the menu price at that moment, plus the chosen variant and add-ons. If a dish has sizes, one size is required. Token numbers start at 1 each India service date and rise by one. The guest sees Preparing until staff marks Ready, then Served.
 
-Live updates use SignalR at `/hubs/floor`. A page joins `house:{restaurantId}` and reloads when the event `changed` arrives.
+Live updates use SignalR at `/hubs/floor`. A page joins `house:{restaurantId}` and reloads when the event `changed` arrives. Floor and the token screen play a short chime and show a toast when a new Preparing token appears.
 
 ## Audit
 

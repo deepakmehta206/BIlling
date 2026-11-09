@@ -4,6 +4,7 @@ import { Api } from '../core/api.service';
 import { errorMessage } from '../core/http-error';
 import { LiveService } from '../core/live.service';
 import { Ticket, TokenBoard } from '../core/models';
+import { OrderAlertService } from '../core/order-alert.service';
 
 @Component({
   selector: 'app-screen',
@@ -11,6 +12,7 @@ import { Ticket, TokenBoard } from '../core/models';
 })
 export class TokenScreenPage {
   private readonly api = inject(Api);
+  private readonly alerts = inject(OrderAlertService);
   readonly board = signal<TokenBoard | null>(null);
   readonly error = signal<string | null>(null);
 
@@ -20,6 +22,8 @@ export class TokenScreenPage {
     const load = () =>
       this.api.tokenBoard(code).subscribe({
         next: (board) => {
+          this.alerts.forHouse(board.restaurantId);
+          this.alerts.notice(board.tickets);
           this.board.set(board);
           this.error.set(null);
           live.connect(board.restaurantId);
