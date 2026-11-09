@@ -8,3 +8,4 @@ client/dist/
 src/Billing.Api/menu-images/
 client/.angular/
 TestResults/
+src/Billing.Api/appsettings.json

@@ -1,0 +1,41 @@
+---
+description: CRUD success and confirm use Aangan toast and ask dialog, not SweetAlert2
+alwaysApply: true
+---
+
+# CRUD alerts
+
+After a create, update, or delete succeeds, show a toast. Do not use `window.alert`, `window.confirm`, or add SweetAlert / SweetAlert2. The desk already has `ToastService` (`client/src/app/core/toast.service.ts`) and `<app-toasts>` in the shell.
+
+```typescript
+this.api.saveItem(id, body).subscribe({
+  next: () => {
+    this.toasts.show('Dish saved.');
+    this.reset();
+    this.load();
+  },
+  error: (error) => this.error.set(errorMessage(error)),
+});
+```
+
+Inject `ToastService` on the page. The message is one short sentence. Errors stay on the page `error` signal, not in a toast.
+
+## Confirm before destroy
+
+Archive, delete, or any other hard desk action must ask first. Do not call the API on the first click. Use a two-step control or an in-app ask panel in charcoal, cream, and saffron — same look as the rest of the desk. Styles stay in `client/src/styles.scss`.
+
+```typescript
+if (!this.confirmArchive()) {
+  this.confirmArchive.set(true);
+  return;
+}
+this.api.archive(id).subscribe({
+  next: (result) => {
+    this.toasts.show(result.message);
+    this.confirmArchive.set(false);
+  },
+  error: (error) => this.error.set(errorMessage(error)),
+});
+```
+
+Cancel clears the confirm signal. Escape and leaving the screen clear it too when that page already listens for Escape.

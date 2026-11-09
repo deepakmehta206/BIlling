@@ -141,8 +141,6 @@ public class MenuService(AppDbContext db, IRequestContext request, HouseAccess a
             return ServiceResult<MenuItemDto>.Fail(400, "Dish name needs at least 2 characters.");
         if (!FoodTypes.Known(food))
             return ServiceResult<MenuItemDto>.Fail(400, "Choose Veg, NonVeg or Egg.");
-        if (!MenuPrice(body.Price))
-            return ServiceResult<MenuItemDto>.Fail(400, "Price can have 4 digits and 2 decimals, up to 9999.99.");
 
         var category = await db.MenuCategories.FirstOrDefaultAsync(item => item.Id == body.CategoryId && item.RestaurantId == house.Value.Id, cancellationToken);
         if (category is null)
@@ -151,6 +149,19 @@ public class MenuService(AppDbContext db, IRequestContext request, HouseAccess a
         var priceError = PriceError(body.Variants) ?? PriceError(body.Addons);
         if (priceError is not null)
             return ServiceResult<MenuItemDto>.Fail(400, priceError);
+
+        var sized = (body.Variants ?? [])
+            .Where(row => !string.IsNullOrWhiteSpace(row.Name) && MenuPrice(row.Price))
+            .ToList();
+        if (sized.Count > 0)
+        {
+            var full = sized.FirstOrDefault(row =>
+                string.Equals(row.Name.Trim(), "full", StringComparison.OrdinalIgnoreCase));
+            body.Price = full?.Price ?? sized.Max(row => row.Price);
+        }
+
+        if (!MenuPrice(body.Price))
+            return ServiceResult<MenuItemDto>.Fail(400, "Price can have 4 digits and 2 decimals, up to 9999.99.");
 
         MenuItem item;
         if (body.Id is Guid id)

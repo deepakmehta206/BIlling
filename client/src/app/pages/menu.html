@@ -30,7 +30,9 @@
               <strong>{{ category.name }}</strong>
               <span>{{ category.itemCount }} dishes</span>
             </div>
-            <button type="button" class="btn ghost tiny" (click)="removeCategory(category.id)">Archive</button>
+            <button type="button" class="btn ghost tiny" (click)="removeCategory(category.id)">
+              {{ asking('category', category.id) ? 'Yes, archive' : 'Archive' }}
+            </button>
           </li>
         }
       </ul>
@@ -64,9 +66,9 @@
         <label>Price
           <span class="money" [class.bad]="editing().price && !moneyOk(editing().price)">
             <span>₹</span>
-            <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="editing().price" (ngModelChange)="editing.set({ ...editing(), price: $event })" name="price" />
+            <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="editing().price" (ngModelChange)="editing.set({ ...editing(), price: $event })" name="price" [readonly]="hasSizes()" />
           </span>
-          <span class="fine">Up to 9999.99</span>
+          <span class="fine">{{ hasSizes() ? 'Taken from Full size' : 'Up to 9999.99' }}</span>
         </label>
         <label>Type
           <span class="pick" [class.open]="openPick() === 'food'" [class.veg]="editing().foodType === 'Veg'" [class.egg]="editing().foodType === 'Egg'" [class.nonveg]="editing().foodType === 'NonVeg'" (click)="$event.stopPropagation()">
@@ -116,10 +118,10 @@
           <strong>Sizes</strong>
           @for (row of editing().variants; track $index) {
             <div class="inline-add">
-              <input [ngModel]="row.name" (ngModelChange)="row.name = $event" [name]="'vname' + $index" placeholder="Half" />
+              <input [ngModel]="row.name" (ngModelChange)="setVariantName($index, $event)" [name]="'vname' + $index" placeholder="Half" />
               <span class="money" [class.bad]="row.price && !moneyOk(row.price)">
                 <span>₹</span>
-                <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="row.price" (ngModelChange)="row.price = $event" [name]="'vprice' + $index" />
+                <input type="text" inputmode="decimal" placeholder="0.00" [ngModel]="row.price" (ngModelChange)="setVariantPrice($index, $event)" [name]="'vprice' + $index" />
               </span>
             </div>
           }
@@ -169,7 +171,9 @@
             }
             <div class="card-actions">
               <button type="button" class="btn ghost tiny" (click)="edit(item)">Edit</button>
-              <button type="button" class="btn ghost tiny" (click)="removeItem(item.id)">Archive</button>
+              <button type="button" class="btn ghost tiny" (click)="removeItem(item.id)">
+                {{ asking('item', item.id) ? 'Yes, archive' : 'Archive' }}
+              </button>
             </div>
           </div>
         </article>

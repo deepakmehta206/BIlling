@@ -47,6 +47,7 @@ export class MenuPage {
   readonly categoryName = signal('');
   readonly editing = signal<DishDraft>(this.blank());
   readonly openPick = signal<'category' | 'food' | null>(null);
+  readonly confirmAsk = signal<{ kind: 'category' | 'item'; id: string } | null>(null);
   readonly foodTypes = [
     { value: 'Veg', label: 'Veg' },
     { value: 'NonVeg', label: 'Non-veg' },
@@ -92,26 +93,38 @@ export class MenuPage {
   removeCategory(categoryId: string) {
     const id = this.desk.activeId();
     if (!id) return;
+    const ask = this.confirmAsk();
+    if (!ask || ask.kind !== 'category' || ask.id !== categoryId) {
+      this.confirmAsk.set({ kind: 'category', id: categoryId });
+      return;
+    }
     this.api.deleteCategory(id, categoryId).subscribe({
       next: (result) => {
         this.toasts.show(result.message);
+        this.confirmAsk.set(null);
         this.load();
       },
       error: (error) => this.error.set(errorMessage(error)),
     });
   }
 
+  asking(kind: 'category' | 'item', id: string) {
+    const ask = this.confirmAsk();
+    return !!ask && ask.kind === kind && ask.id === id;
+  }
+
   edit(item: MenuItem) {
+    const variants = item.variants.map((row) => ({ name: row.name, price: moneyText(row.price) }));
     this.editing.set({
       id: item.id,
       categoryId: item.categoryId,
       name: item.name,
       description: item.description ?? '',
       foodType: item.foodType,
-      price: moneyText(item.price),
+      price: this.priceFromSizes(variants) ?? moneyText(item.price),
       isAvailable: item.isAvailable,
       sortOrder: item.sortOrder,
-      variants: item.variants.map((row) => ({ name: row.name, price: moneyText(row.price) })),
+      variants,
       addons: item.addons.map((row) => ({ name: row.name, price: moneyText(row.price) })),
       imageUrl: item.imageUrl,
       imageData: null,
@@ -127,6 +140,32 @@ export class MenuPage {
   addRow(kind: 'variants' | 'addons') {
     const current = this.editing();
     this.editing.set({ ...current, [kind]: [...current[kind], { name: '', price: '' }] });
+  }
+
+  hasSizes() {
+    return this.editing().variants.some((row) => row.name.trim().length > 0);
+  }
+
+  setVariantName(index: number, name: string) {
+    this.editing.update((draft) => {
+      const variants = draft.variants.map((row, i) => (i === index ? { ...row, name } : row));
+      return { ...draft, variants, price: this.priceFromSizes(variants) ?? draft.price };
+    });
+  }
+
+  setVariantPrice(index: number, price: string) {
+    this.editing.update((draft) => {
+      const variants = draft.variants.map((row, i) => (i === index ? { ...row, price } : row));
+      return { ...draft, variants, price: this.priceFromSizes(variants) ?? draft.price };
+    });
+  }
+
+  private priceFromSizes(variants: PriceRow[]) {
+    const sized = variants.filter((row) => row.name.trim() && this.moneyOk(row.price));
+    if (!sized.length) return null;
+    const full = sized.find((row) => row.name.trim().toLowerCase() === 'full');
+    if (full) return full.price.trim();
+    return sized.reduce((best, row) => (Number(row.price) >= Number(best.price) ? row : best)).price.trim();
   }
 
   moneyOk(value: string) {
@@ -164,6 +203,7 @@ export class MenuPage {
   @HostListener('document:keydown.escape')
   closePickOnEscape() {
     this.openPick.set(null);
+    this.confirmAsk.set(null);
   }
 
   photo(path: string | null | undefined) {
@@ -198,7 +238,8 @@ export class MenuPage {
     const id = this.desk.activeId();
     const draft = this.editing();
     if (!id || !draft.categoryId || !draft.name?.trim()) return;
-    const priced = [draft.price, ...draft.variants.filter((row) => row.name.trim()).map((row) => row.price), ...draft.addons.filter((row) => row.name.trim()).map((row) => row.price)];
+    const price = this.priceFromSizes(draft.variants) ?? draft.price;
+    const priced = [price, ...draft.variants.filter((row) => row.name.trim()).map((row) => row.price), ...draft.addons.filter((row) => row.name.trim()).map((row) => row.price)];
     if (priced.some((value) => !this.moneyOk(value))) {
       this.error.set('Price can have 4 digits and 2 decimals, up to 9999.99.');
       return;
@@ -210,7 +251,7 @@ export class MenuPage {
         name: draft.name,
         description: draft.description,
         foodType: draft.foodType || 'Veg',
-        price: Number(draft.price),
+        price: Number(price),
         isAvailable: draft.isAvailable !== false,
         sortOrder: draft.sortOrder || 0,
         imageData: draft.imageData,
@@ -220,7 +261,8 @@ export class MenuPage {
       })
       .subscribe({
         next: () => {
-          this.toasts.show('Dish saved.');
+          this.toasts.show(draft.id ? 'Dish updated.' : 'Dish added.');
+          this.confirmAsk.set(null);
           this.reset();
           this.load();
         },
@@ -231,9 +273,16 @@ export class MenuPage {
   removeItem(itemId: string) {
     const id = this.desk.activeId();
     if (!id) return;
+    const ask = this.confirmAsk();
+    if (!ask || ask.kind !== 'item' || ask.id !== itemId) {
+      this.confirmAsk.set({ kind: 'item', id: itemId });
+      return;
+    }
     this.api.deleteItem(id, itemId).subscribe({
       next: (result) => {
         this.toasts.show(result.message);
+        this.confirmAsk.set(null);
+        if (this.editing().id === itemId) this.reset();
         this.load();
       },
       error: (error) => this.error.set(errorMessage(error)),
