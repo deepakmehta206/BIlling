@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -13,7 +13,7 @@ import { ToastService } from '../core/toast.service';
 
 @Component({
   selector: 'app-floor',
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe],
   templateUrl: './floor.html',
 })
 export class FloorPage {
@@ -61,6 +61,12 @@ export class FloorPage {
     if (table.status === 'Occupied' || table.openToken) return 'occupied';
     if (table.booking) return 'booked';
     return 'available';
+  }
+
+  tableTickets() {
+    const table = this.selected();
+    if (!table) return [];
+    return this.tickets().filter((ticket) => ticket.tableName === table.name);
   }
 
   setSeats(event: Event) {

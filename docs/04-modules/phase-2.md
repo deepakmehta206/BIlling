@@ -23,7 +23,7 @@ Turning a module off returns 403 from the matching API. The public QR page also 
 | Red | An order is Preparing or Ready |
 | Grey | Blocked. Guests cannot order and staff cannot book it. |
 
-A new order marks the table Occupied. Served or Cancelled returns it to Available when no other open order remains. A booking does not by itself occupy the table.
+A new order marks the table Occupied. Served or Cancelled returns it to Available when no other open order remains. A booking does not by itself occupy the table. Click a table to see its open tokens with dish lines, sizes, add-ons, and line totals in the side panel.
 
 ## Orders
 

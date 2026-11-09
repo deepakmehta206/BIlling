@@ -115,6 +115,36 @@
           <input class="count" inputmode="numeric" autocomplete="off" placeholder="Guests" name="count" [value]="guestCount() > 0 ? guestCount() : ''" (input)="setGuests($event)" />
           <button class="btn solid" type="submit">Book for 90 minutes</button>
         </form>
+
+        <h3>Orders on this table</h3>
+        @for (ticket of tableTickets(); track ticket.id) {
+          <article class="ticket-card">
+            <div class="ticket-row">
+              <div>
+                <strong>#{{ ticket.tokenNumber }}</strong>
+                <span>{{ ticket.status }}@if (ticket.guestName) { · {{ ticket.guestName }} }@if (ticket.playDiscountPercent) { · {{ ticket.playDiscountPercent }}% off }</span>
+              </div>
+              <div class="card-actions">
+                @if (ticket.status !== 'Ready') {
+                  <button type="button" class="btn ghost tiny" (click)="mark(ticket, 'Ready')">Ready</button>
+                }
+                <button type="button" class="btn ghost tiny" (click)="mark(ticket, 'Served')">Served</button>
+              </div>
+            </div>
+            <ul class="ticket-lines">
+              @for (line of ticket.lines; track $index) {
+                <li>
+                  <span>{{ line.quantity }} × {{ line.itemName }}@if (line.variantName) { · {{ line.variantName }} }@if (line.addonSummary) { · {{ line.addonSummary }} }</span>
+                  <strong>{{ line.unitPrice * line.quantity | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+                </li>
+              } @empty {
+                <li class="muted">No dishes on this token.</li>
+              }
+            </ul>
+          </article>
+        } @empty {
+          <p class="muted">No open order on this table.</p>
+        }
       }
 
       <h3>Open tickets</h3>
