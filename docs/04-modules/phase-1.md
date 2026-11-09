@@ -6,7 +6,7 @@
 - Open a restaurant and create its restaurant admin in the same step.
 - Edit the house, pause it, or archive it.
 - Turn each module on or off. Only real changes are written to the audit.
-- Sign in as that restaurant admin and see the house read-only, including which modules were granted.
+- Sign in as that restaurant admin and edit house details (name, address, GSTIN, UPI, owner). Code, active flag, and modules stay with the platform.
 - Read the audit log: action, person, restaurant, IP, time. A restaurant admin sees only their house.
 - Open the Desk home for a numbered quick path (menu → floor → token screen → billing → books) and today’s pulse: open tokens, occupied tables, ready-to-bill, unpaid bills, sales, and bookings when those modules are on.
 - Open **Your profile** (sidebar name) to change name, phone, email, and password. House staff must keep a phone. A new password needs the current one; the API returns a fresh token.
@@ -22,7 +22,7 @@
 | GET | `/api/restaurants?q=` | Super admin |
 | GET | `/api/restaurants/{id}` | Super admin, or that house's admin |
 | POST | `/api/restaurants` | Super admin |
-| PUT | `/api/restaurants/{id}` | Super admin |
+| PUT | `/api/restaurants/{id}` | Super admin (full), or that house’s restaurant admin (details only; code and active locked) |
 | DELETE | `/api/restaurants/{id}` | Super admin, soft delete |
 | PUT | `/api/restaurants/{id}/modules` | Super admin |
 | GET | `/api/audit-logs?page&pageSize&restaurantId&action` | Signed in, scoped |

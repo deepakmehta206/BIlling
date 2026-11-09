@@ -85,10 +85,12 @@ export class RestaurantEditorPage {
   }
 
   save() {
-    if (!this.auth.isSuperAdmin() || this.form.invalid || this.busy()) {
+    if (this.form.invalid || this.busy()) {
       this.form.markAllAsTouched();
       return;
     }
+    if (this.isNew() && !this.auth.isSuperAdmin()) return;
+    if (!this.isNew() && !this.auth.isSuperAdmin() && !this.canEditHouse()) return;
 
     const value = this.form.getRawValue();
     this.busy.set(true);
@@ -133,6 +135,7 @@ export class RestaurantEditorPage {
       .subscribe({
         next: (house) => {
           this.apply(house);
+          this.syncDesk(house);
           this.busy.set(false);
           this.toasts.show('House details saved.');
         },
@@ -141,6 +144,12 @@ export class RestaurantEditorPage {
           this.busy.set(false);
         },
       });
+  }
+
+  canEditHouse() {
+    const user = this.auth.user();
+    if (!user) return false;
+    return user.isSuperAdmin || user.roles.includes('RestaurantAdmin');
   }
 
   toggle(module: ModuleGrant) {
@@ -215,8 +224,26 @@ export class RestaurantEditorPage {
     });
     if (this.auth.isSuperAdmin()) {
       this.form.enable();
-    } else {
-      this.form.disable();
+      return;
     }
+
+    if (this.canEditHouse()) {
+      this.form.enable();
+      this.form.controls.code.disable({ emitEvent: false });
+      this.form.controls.isActive.disable({ emitEvent: false });
+      return;
+    }
+
+    this.form.disable();
+  }
+
+  private syncDesk(house: RestaurantDetail) {
+    if (this.desk.activeId() !== house.id) return;
+    this.desk.select(
+      house.id,
+      house.name,
+      house.code,
+      house.modules.filter((module) => module.isEnabled).map((module) => module.code),
+    );
   }
 }

@@ -24,7 +24,13 @@
     <div class="fields">
       <label>Name<input formControlName="name" placeholder="Saffron & Stone" /></label>
       <label>Legal name<input formControlName="legalName" placeholder="Optional" /></label>
-      <label>Code<input formControlName="code" placeholder="{{ isNew() ? 'Leave blank to generate' : '' }}" /></label>
+      <label>
+        Code
+        <input formControlName="code" placeholder="{{ isNew() ? 'Leave blank to generate' : '' }}" />
+        @if (!auth.isSuperAdmin() && !isNew()) {
+          <span class="fine">Token screen URL. Only the platform can change it.</span>
+        }
+      </label>
       <label>City<input formControlName="city" /></label>
       <label>State<input formControlName="state" /></label>
       <label>Phone<input formControlName="phone" /></label>
@@ -32,7 +38,7 @@
       <label>Email<input type="email" formControlName="email" /></label>
       <label>GSTIN<input formControlName="gstin" maxlength="15" /></label>
       <label>UPI id<input formControlName="upiId" placeholder="house@okbank" /></label>
-      @if (!isNew()) {
+      @if (!isNew() && auth.isSuperAdmin()) {
         <label class="check">
           <input type="checkbox" formControlName="isActive" />
           House is active and its staff can sign in
@@ -76,7 +82,7 @@
     </section>
   }
 
-  @if (auth.isSuperAdmin()) {
+  @if (auth.isSuperAdmin() || (!isNew() && canEditHouse())) {
     <div class="form-actions">
       <button class="btn solid" type="submit" [disabled]="busy()">
         {{ busy() ? 'Saving…' : isNew() ? 'Open this house' : 'Save details' }}

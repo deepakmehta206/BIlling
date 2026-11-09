@@ -158,8 +158,11 @@ public class RestaurantService(
 
     public async Task<ServiceResult<RestaurantDetailDto>> UpdateAsync(Guid id, UpdateRestaurantRequest body, CancellationToken cancellationToken)
     {
-        if (!request.IsSuperAdmin)
-            return ServiceResult<RestaurantDetailDto>.Fail(403, "Only the platform admin can edit a restaurant.");
+        if (!CanRead(id))
+            return ServiceResult<RestaurantDetailDto>.Fail(403, "You can edit only your own restaurant.");
+
+        if (!request.IsSuperAdmin && !await IsHouseAdmin(cancellationToken))
+            return ServiceResult<RestaurantDetailDto>.Fail(403, "Only the house admin can edit these details.");
 
         var restaurant = await db.Restaurants.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (restaurant is null)
@@ -169,8 +172,6 @@ public class RestaurantService(
         if (house.Error is not null)
             return ServiceResult<RestaurantDetailDto>.Fail(400, house.Error);
 
-        var requestedCode = InputRules.Clean(body.Code);
-        restaurant.Code = await NextCodeAsync(requestedCode ?? restaurant.Code, restaurant.Id, cancellationToken);
         restaurant.Name = house.Name;
         restaurant.LegalName = house.LegalName;
         restaurant.Address = house.Address;
@@ -182,7 +183,13 @@ public class RestaurantService(
         restaurant.OwnerName = house.OwnerName;
         restaurant.OwnerPhone = house.OwnerPhone;
         restaurant.UpiId = house.UpiId;
-        restaurant.IsActive = body.IsActive;
+
+        if (request.IsSuperAdmin)
+        {
+            var requestedCode = InputRules.Clean(body.Code);
+            restaurant.Code = await NextCodeAsync(requestedCode ?? restaurant.Code, restaurant.Id, cancellationToken);
+            restaurant.IsActive = body.IsActive;
+        }
 
         db.AuditLogs.Add(Persistence.AuditEntries.Create(
             request,
@@ -279,6 +286,16 @@ public class RestaurantService(
     }
 
     private bool CanRead(Guid id) => request.IsSuperAdmin || request.RestaurantId == id;
+
+    private Task<bool> IsHouseAdmin(CancellationToken cancellationToken)
+    {
+        if (request.UserId is not Guid userId)
+            return Task.FromResult(false);
+
+        return db.UserRoles.AnyAsync(
+            link => link.UserId == userId && link.Role.Name == RoleNames.RestaurantAdmin,
+            cancellationToken);
+    }
 
     private async Task<string> NextCodeAsync(string preferred, Guid? exceptId, CancellationToken cancellationToken)
     {

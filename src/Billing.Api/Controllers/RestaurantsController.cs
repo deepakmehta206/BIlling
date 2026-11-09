@@ -25,7 +25,6 @@ public class RestaurantsController(IRestaurantService restaurants) : ControllerB
     public async Task<IActionResult> Create(CreateRestaurantRequest request, CancellationToken cancellationToken) =>
         ApiResults.From(await restaurants.CreateAsync(request, cancellationToken));
 
-    [Authorize(Policy = "SuperAdmin")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateRestaurantRequest request, CancellationToken cancellationToken) =>
         ApiResults.From(await restaurants.UpdateAsync(id, request, cancellationToken));
