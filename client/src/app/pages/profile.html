@@ -1,0 +1,49 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ houseLabel() }}</p>
+    <h1>Your profile.</h1>
+    <p class="lede">Update the name, phone, email, and password you use to sign in.</p>
+  </div>
+</header>
+
+@if (error()) {
+  <p class="banner bad">{{ error() }}</p>
+}
+
+<section class="panel profile-panel">
+  <div class="panel-head">
+    <h2>Sign-in details</h2>
+    <p>{{ roleLabel() }}</p>
+  </div>
+  <form class="fields" (ngSubmit)="save()">
+    <label>
+      Full name
+      <input [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" autocomplete="name" />
+    </label>
+    <label>
+      Phone
+      <input inputmode="numeric" autocomplete="tel" [ngModel]="phone()" (ngModelChange)="phone.set($event)" name="phone" placeholder="10–15 digits" />
+    </label>
+    <label class="wide">
+      Email
+      <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" autocomplete="username" />
+    </label>
+    <label>
+      Current password
+      <input type="password" [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" name="currentPassword" autocomplete="current-password" placeholder="Only to change password" />
+    </label>
+    <label>
+      New password
+      <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" name="newPassword" autocomplete="new-password" placeholder="8+ chars, letter and number" />
+    </label>
+    <label class="wide">
+      Confirm new password
+      <input type="password" [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" name="confirmPassword" autocomplete="new-password" />
+    </label>
+    <div class="form-actions wide">
+      <button class="btn solid" type="submit" [disabled]="busy()">
+        {{ busy() ? 'Saving…' : 'Save profile' }}
+      </button>
+    </div>
+  </form>
+</section>

@@ -2,6 +2,7 @@ export interface CurrentUser {
   id: string;
   fullName: string;
   email: string;
+  phone: string | null;
   isSuperAdmin: boolean;
   restaurantId: string | null;
   restaurantName: string | null;

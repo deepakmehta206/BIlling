@@ -11,6 +11,7 @@ import { InventoryPage } from './pages/inventory';
 import { LoginPage } from './pages/login';
 import { MenuPage } from './pages/menu';
 import { PayPage } from './pages/pay';
+import { ProfilePage } from './pages/profile';
 import { RestaurantEditorPage } from './pages/restaurant-editor';
 import { RestaurantListPage } from './pages/restaurant-list';
 import { TokenScreenPage } from './pages/screen';
@@ -41,6 +42,7 @@ export const routes: Routes = [
       { path: 'bookings', component: BookingsPage },
       { path: 'reports', component: ReportsPage },
       { path: 'audit', component: AuditPage },
+      { path: 'profile', component: ProfilePage },
     ],
   },
   { path: '**', redirectTo: '' },

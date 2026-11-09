@@ -97,13 +97,13 @@
       </a>
     </nav>
     <div class="side-user">
-      <div class="who">
+      <a class="who" routerLink="/profile" routerLinkActive="active" aria-label="Your profile">
         <span class="avatar" aria-hidden="true">{{ initials() }}</span>
         <div>
           <strong>{{ auth.user()?.fullName }}</strong>
           <span>{{ auth.user()?.email }}</span>
         </div>
-      </div>
+      </a>
       <button type="button" class="sign-out" (click)="auth.logout()" aria-label="Sign out">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7V5h9v14h-9M4 12h11M12 8l4 4-4 4"/></svg>
         <span>Sign out</span>

@@ -9,6 +9,7 @@
 - Sign in as that restaurant admin and see the house read-only, including which modules were granted.
 - Read the audit log: action, person, restaurant, IP, time. A restaurant admin sees only their house.
 - Open the Desk home for a numbered quick path (menu → floor → token screen → billing → books) and today’s pulse: open tokens, occupied tables, ready-to-bill, unpaid bills, sales, and bookings when those modules are on.
+- Open **Your profile** (sidebar name) to change name, phone, email, and password. House staff must keep a phone. A new password needs the current one; the API returns a fresh token.
 
 ## API
 
@@ -17,6 +18,7 @@
 | POST | `/api/auth/login` | Public |
 | GET | `/api/auth/me` | Signed in |
 | GET | `/api/dashboard` | Signed in, scoped |
+| PUT | `/api/auth/me` | Signed in — name, phone, email; password needs the current one |
 | GET | `/api/restaurants?q=` | Super admin |
 | GET | `/api/restaurants/{id}` | Super admin, or that house's admin |
 | POST | `/api/restaurants` | Super admin |

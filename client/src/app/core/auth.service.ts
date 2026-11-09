@@ -33,6 +33,18 @@ export class AuthService {
     });
   }
 
+  updateProfile(body: {
+    fullName: string;
+    email: string;
+    phone: string | null;
+    currentPassword: string | null;
+    newPassword: string | null;
+  }) {
+    return this.http
+      .put<LoginResponse>(`${environment.apiUrl}/auth/me`, body)
+      .pipe(tap((response) => this.persist(response.accessToken, response.user)));
+  }
+
   logout() {
     localStorage.removeItem('aangan.token');
     localStorage.removeItem('aangan.user');

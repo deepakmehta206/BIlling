@@ -19,4 +19,9 @@ public class AuthController(IAuthService auth) : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> Me(CancellationToken cancellationToken) =>
         ApiResults.From(await auth.MeAsync(cancellationToken));
+
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request, CancellationToken cancellationToken) =>
+        ApiResults.From(await auth.UpdateProfileAsync(request, cancellationToken));
 }
