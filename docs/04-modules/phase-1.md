@@ -8,6 +8,7 @@
 - Turn each module on or off. Only real changes are written to the audit.
 - Sign in as that restaurant admin and see the house read-only, including which modules were granted.
 - Read the audit log: action, person, restaurant, IP, time. A restaurant admin sees only their house.
+- Open the Desk home for a numbered quick path (menu → floor → token screen → billing → books) and today’s pulse: open tokens, occupied tables, ready-to-bill, unpaid bills, sales, and bookings when those modules are on.
 
 ## API
 

@@ -1,18 +1,90 @@
 <header class="page-head">
   <div>
-    <p class="eyebrow">{{ auth.isSuperAdmin() ? 'Platform' : auth.user()?.restaurantName }}</p>
-    <h1>{{ auth.isSuperAdmin() ? 'The houses on your books.' : 'Your house, as the platform left it.' }}</h1>
+    <p class="eyebrow">{{ houseTitle() }}</p>
+    <h1>Desk.</h1>
+    <p class="lede">Work the house in order — menu, floor, kitchen, bill — then the books.</p>
   </div>
   @if (auth.isSuperAdmin()) {
     <a class="btn solid" routerLink="/restaurants/new">Open a restaurant</a>
+  } @else if (desk.has('BILLING')) {
+    <a class="btn solid" routerLink="/billing">Open billing</a>
+  } @else if (desk.has('TABLES')) {
+    <a class="btn solid" routerLink="/floor">Open floor</a>
   }
 </header>
 
 @if (error()) {
   <p class="banner bad">{{ error() }}</p>
-} @else if (!data()) {
-  <p class="muted">Opening the book…</p>
-} @else {
+}
+
+@if (auth.isSuperAdmin() && !desk.activeId()) {
+  <p class="banner">Pick a house in the sidebar to see today’s floor and billing pulse.</p>
+}
+
+<section class="runway">
+  <div class="panel-head">
+    <h2>Quick path</h2>
+    <p>Tap in sequence for the service day.</p>
+  </div>
+  <ol class="runway-steps">
+    @for (step of steps(); track step.n) {
+      <li>
+        <a [routerLink]="step.path">
+          <em>{{ step.n }}</em>
+          <div>
+            <strong>{{ step.title }}</strong>
+            <span>{{ step.hint }}</span>
+          </div>
+        </a>
+      </li>
+    }
+  </ol>
+</section>
+
+@if (pulse(); as day) {
+  <section class="stats desk-pulse">
+    @if (desk.has('TABLES')) {
+      <article>
+        <span>Open tokens</span>
+        <strong>{{ day.openTokens }}</strong>
+        <em>{{ day.preparing }} cooking · {{ day.ready }} ready</em>
+      </article>
+      <article>
+        <span>Occupied tables</span>
+        <strong>{{ day.occupiedTables }}</strong>
+        <em>On the floor now</em>
+      </article>
+    }
+    @if (desk.has('BILLING')) {
+      <article>
+        <span>Ready to bill</span>
+        <strong>{{ day.toBill }}</strong>
+        <em>Tokens without a bill</em>
+      </article>
+      <article>
+        <span>Unpaid bills</span>
+        <strong>{{ day.unpaidBills }}</strong>
+        <em>{{ day.paidBills }} paid today</em>
+      </article>
+    }
+    @if (desk.has('REPORTS')) {
+      <article>
+        <span>Sales today</span>
+        <strong class="money">{{ day.sales | currency: 'INR' : 'symbol' : '1.0-0' }}</strong>
+        <em>Paid take for India service date</em>
+      </article>
+    }
+    @if (desk.has('BOOKING')) {
+      <article>
+        <span>Bookings today</span>
+        <strong>{{ day.bookings }}</strong>
+        <em>Booked or seated</em>
+      </article>
+    }
+  </section>
+}
+
+@if (data()) {
   <section class="stats">
     <article>
       <span>Restaurants</span>
@@ -76,4 +148,6 @@
       }
     </div>
   </section>
+} @else if (!error()) {
+  <p class="muted">Opening the book…</p>
 }
