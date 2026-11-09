@@ -1,5 +1,5 @@
 const localApi = 'http://localhost:5254';
-const liveApi = 'https://portal.advanceticketnow.com';
+const liveApi = 'https://advanceticketnow.com';
 
 function savedOrigin() {
   try {
