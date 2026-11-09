@@ -5,7 +5,7 @@ import { ToastService } from './toast.service';
 @Injectable({ providedIn: 'root' })
 export class OrderAlertService {
   private readonly toasts = inject(ToastService);
-  private known = new Set<string>();
+  private known = new Map<string, number>();
   private houseId: string | null = null;
   private seeded = false;
   private audio: AudioContext | null = null;
@@ -27,20 +27,31 @@ export class OrderAlertService {
 
   notice(tickets: Ticket[]) {
     if (!this.seeded) {
-      for (const ticket of tickets) this.known.add(ticket.id);
+      for (const ticket of tickets) this.known.set(ticket.id, this.lineCount(ticket));
       this.seeded = true;
       return;
     }
 
-    const fresh = tickets.filter((ticket) => ticket.status === 'Preparing' && !this.known.has(ticket.id));
-    for (const ticket of tickets) this.known.add(ticket.id);
-    if (!fresh.length) return;
-
-    for (const ticket of fresh) {
+    const alerts: string[] = [];
+    for (const ticket of tickets) {
+      const lines = this.lineCount(ticket);
+      const prev = this.known.get(ticket.id);
+      this.known.set(ticket.id, lines);
+      if (ticket.status !== 'Preparing') continue;
       const table = ticket.tableName ? ` · ${ticket.tableName}` : '';
-      this.toasts.show(`New order · #${ticket.tokenNumber}${table}`);
+      if (prev === undefined) {
+        alerts.push(`New order · #${ticket.tokenNumber}${table}`);
+      } else if (lines > prev) {
+        alerts.push(`More dishes · #${ticket.tokenNumber}${table}`);
+      }
     }
+    if (!alerts.length) return;
+    for (const message of alerts) this.toasts.show(message);
     this.chime();
+  }
+
+  private lineCount(ticket: Ticket) {
+    return ticket.lines?.length ?? 0;
   }
 
   private ensureAudio() {

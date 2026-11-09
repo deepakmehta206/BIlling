@@ -1,6 +1,7 @@
 using Billing.Application.Abstractions;
 using Billing.Application.Common;
 using Billing.Application.Dtos;
+using Billing.Domain.Billing;
 using Billing.Domain.Entities;
 using Billing.Domain.Floor;
 using Billing.Domain.Security;
@@ -348,6 +349,38 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
         }
 
         var day = IndiaClock.Today();
+        var open = await db.GuestOrders
+            .Include(item => item.Lines)
+            .Where(item =>
+                item.DiningTableId == table.Id
+                && item.ServiceDate == day
+                && item.Status != OrderStatuses.Cancelled
+                && !db.Bills.Any(bill => bill.GuestOrderId == item.Id && bill.Status != BillStatuses.Cancelled))
+            .OrderByDescending(item => item.TokenNumber)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (table.Status != TableStatuses.Blocked)
+            table.Status = TableStatuses.Occupied;
+
+        if (open is not null)
+        {
+            foreach (var line in lines)
+                line.GuestOrderId = open.Id;
+            db.OrderLines.AddRange(lines);
+            open.Status = OrderStatuses.Preparing;
+            var guestName = InputRules.Clean(body.GuestName);
+            if (!string.IsNullOrWhiteSpace(guestName))
+                open.GuestName = guestName;
+            var note = InputRules.Clean(body.Note);
+            if (!string.IsNullOrWhiteSpace(note))
+                open.Note = string.IsNullOrWhiteSpace(open.Note) ? note : $"{open.Note}; {note}";
+            db.AuditLogs.Add(AuditEntries.Create(request, "order.added", "GuestOrder", open.Id.ToString(), $"Token {open.TokenNumber} got more dishes from {table.Name}.", table.RestaurantId, house.Value.Name, open.GuestName ?? "guest"));
+            await db.SaveChangesAsync(cancellationToken);
+            await live.Changed(table.RestaurantId, cancellationToken);
+            await db.Entry(open).Collection(item => item.Lines).LoadAsync(cancellationToken);
+            return ServiceResult<PublicOrderDto>.Ok(await MapPublic(open, house.Value.Name, await billing.PaymentForAsync(open, cancellationToken), cancellationToken));
+        }
+
         var token = (await db.GuestOrders.Where(item => item.RestaurantId == table.RestaurantId && item.ServiceDate == day).MaxAsync(item => (int?)item.TokenNumber, cancellationToken) ?? 0) + 1;
         var order = new GuestOrder
         {
@@ -364,17 +397,13 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
         foreach (var line in lines)
             line.GuestOrderId = order.Id;
 
-        if (table.Status != TableStatuses.Blocked)
-            table.Status = TableStatuses.Occupied;
-
         db.GuestOrders.Add(order);
         db.OrderLines.AddRange(lines);
         db.AuditLogs.Add(AuditEntries.Create(request, "order.placed", "GuestOrder", order.Id.ToString(), $"Token {token} from {table.Name}.", table.RestaurantId, house.Value.Name, order.GuestName ?? "guest"));
         await db.SaveChangesAsync(cancellationToken);
         await live.Changed(table.RestaurantId, cancellationToken);
         order.Lines = lines;
-        var payment = await billing.PaymentForAsync(order, cancellationToken);
-        return ServiceResult<PublicOrderDto>.Ok(await MapPublic(order, house.Value.Name, payment, cancellationToken));
+        return ServiceResult<PublicOrderDto>.Ok(await MapPublic(order, house.Value.Name, await billing.PaymentForAsync(order, cancellationToken), cancellationToken));
     }
 
     public async Task<ServiceResult<PublicOrderDto>> GetPublicOrderAsync(Guid orderId, CancellationToken cancellationToken)

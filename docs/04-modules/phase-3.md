@@ -15,7 +15,7 @@ One claim per token. The server turns the score into 0, 5, 10 or 15 percent and 
 
 A bill copies the token's dish names and prices. The server calculates GST and the total. The guest token shows a UPI QR for subtotal plus 5% GST, and that same QR is stored on the bill. Pressing Paid cuts the bill as soon as payment is received: the token is Served, the table is freed when no other open token remains, stock is consumed, and the owner WhatsApp is prepared. Cash still cuts a paid bill from the form, with the GST and discount the counter chooses. An unpaid UPI bill can still be marked paid later. Print opens an 80mm slip with the house, lines, GST, discount, total, and the payment QR. Today's list prints that same slip.
 
-Bill numbers start at 1 each India service date. One live token has one bill that is not cancelled.
+Bill numbers start at 1 each India service date. One live token has one bill that is not cancelled. Extra dishes ordered from the same table before that bill is cut stay on the same token, so the counter still cuts one bill for the visit.
 
 ## Audit
 
