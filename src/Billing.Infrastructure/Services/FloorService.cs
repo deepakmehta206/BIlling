@@ -246,6 +246,42 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
         return ServiceResult<TicketDto>.Ok(MapTicket(order));
     }
 
+    public async Task<ServiceResult<TicketDto>> PlaceCounterOrderAsync(Guid? restaurantId, PlaceOrderRequest body, CancellationToken cancellationToken)
+    {
+        var house = await access.RequireBilling(restaurantId, cancellationToken);
+        if (!house.Succeeded || house.Value is null)
+            return ServiceResult<TicketDto>.Fail(house.StatusCode, house.Error ?? "Cannot open billing.");
+
+        var built = await BuildOrderLines(house.Value.Id, body.Lines ?? [], cancellationToken);
+        if (!built.Succeeded || built.Value is null)
+            return ServiceResult<TicketDto>.Fail(built.StatusCode, built.Error ?? "Add at least one dish.");
+
+        var day = IndiaClock.Today();
+        var token = (await db.GuestOrders.Where(item => item.RestaurantId == house.Value.Id && item.ServiceDate == day).MaxAsync(item => (int?)item.TokenNumber, cancellationToken) ?? 0) + 1;
+        var order = new GuestOrder
+        {
+            Id = Guid.NewGuid(),
+            RestaurantId = house.Value.Id,
+            DiningTableId = null,
+            TableName = "Counter",
+            TokenNumber = token,
+            ServiceDate = day,
+            Status = OrderStatuses.Preparing,
+            GuestName = InputRules.Clean(body.GuestName),
+            Note = InputRules.Clean(body.Note)
+        };
+        foreach (var line in built.Value)
+            line.GuestOrderId = order.Id;
+
+        db.GuestOrders.Add(order);
+        db.OrderLines.AddRange(built.Value);
+        db.AuditLogs.Add(AuditEntries.Create(request, "order.placed", "GuestOrder", order.Id.ToString(), $"Token {token} from the counter.", house.Value.Id, house.Value.Name));
+        await db.SaveChangesAsync(cancellationToken);
+        await live.Changed(house.Value.Id, cancellationToken);
+        order.Lines = built.Value;
+        return ServiceResult<TicketDto>.Ok(MapTicket(order));
+    }
+
     public async Task<ServiceResult<PublicTableDto>> GetPublicTableAsync(string qrToken, CancellationToken cancellationToken)
     {
         var table = await FindTable(qrToken, cancellationToken);
@@ -304,49 +340,10 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
         if (!house.Succeeded || house.Value is null)
             return ServiceResult<PublicOrderDto>.Fail(house.StatusCode, house.Error ?? "Ordering is off.");
 
-        var requested = body.Lines ?? [];
-        if (requested.Count is 0 or > 30)
-            return ServiceResult<PublicOrderDto>.Fail(400, "Add at least one dish.");
-
-        var itemIds = requested.Select(line => line.ItemId).Distinct().ToList();
-        var dishes = await db.MenuItems
-            .Include(item => item.Variants)
-            .Include(item => item.Addons)
-            .Where(item => item.RestaurantId == table.RestaurantId && itemIds.Contains(item.Id) && item.IsAvailable)
-            .ToListAsync(cancellationToken);
-
-        var lines = new List<OrderLine>();
-        foreach (var line in requested)
-        {
-            if (line.Quantity is < 1 or > 20)
-                return ServiceResult<PublicOrderDto>.Fail(400, "Quantity must be between 1 and 20.");
-
-            var dish = dishes.FirstOrDefault(item => item.Id == line.ItemId);
-            if (dish is null)
-                return ServiceResult<PublicOrderDto>.Fail(400, "A dish is no longer available.");
-
-            ItemVariant? variant = null;
-            if (dish.Variants.Count > 0)
-            {
-                variant = dish.Variants.FirstOrDefault(item => item.Id == line.VariantId);
-                if (variant is null)
-                    return ServiceResult<PublicOrderDto>.Fail(400, $"Choose a size for {dish.Name}.");
-            }
-
-            var addons = dish.Addons.Where(item => (line.AddonIds ?? []).Contains(item.Id)).ToList();
-            var unit = (variant?.Price ?? dish.Price) + addons.Sum(item => item.Price);
-            lines.Add(new OrderLine
-            {
-                Id = Guid.NewGuid(),
-                ItemName = dish.Name,
-                MenuItemId = dish.Id,
-                VariantName = variant?.Name,
-                AddonSummary = addons.Count == 0 ? null : string.Join(", ", addons.Select(item => item.Name)),
-                Quantity = line.Quantity,
-                UnitPrice = unit,
-                Note = InputRules.Clean(line.Note)
-            });
-        }
+        var built = await BuildOrderLines(table.RestaurantId, body.Lines ?? [], cancellationToken);
+        if (!built.Succeeded || built.Value is null)
+            return ServiceResult<PublicOrderDto>.Fail(built.StatusCode, built.Error ?? "Add at least one dish.");
+        var lines = built.Value;
 
         var day = IndiaClock.Today();
         var open = await db.GuestOrders
@@ -501,6 +498,54 @@ public class FloorService(AppDbContext db, IRequestContext request, HouseAccess 
             table.CreatedIp,
             booking is null ? null : new TableBookingHint(booking.Id, booking.GuestName, booking.StartsAt, booking.EndsAt),
             token);
+
+    private async Task<ServiceResult<List<OrderLine>>> BuildOrderLines(Guid restaurantId, List<PlaceOrderLine> requested, CancellationToken cancellationToken)
+    {
+        if (requested.Count is 0 or > 30)
+            return ServiceResult<List<OrderLine>>.Fail(400, "Add at least one dish.");
+
+        var itemIds = requested.Select(line => line.ItemId).Distinct().ToList();
+        var dishes = await db.MenuItems
+            .Include(item => item.Variants)
+            .Include(item => item.Addons)
+            .Where(item => item.RestaurantId == restaurantId && itemIds.Contains(item.Id) && item.IsAvailable)
+            .ToListAsync(cancellationToken);
+
+        var lines = new List<OrderLine>();
+        foreach (var line in requested)
+        {
+            if (line.Quantity is < 1 or > 20)
+                return ServiceResult<List<OrderLine>>.Fail(400, "Quantity must be between 1 and 20.");
+
+            var dish = dishes.FirstOrDefault(item => item.Id == line.ItemId);
+            if (dish is null)
+                return ServiceResult<List<OrderLine>>.Fail(400, "A dish is no longer available.");
+
+            ItemVariant? variant = null;
+            if (dish.Variants.Count > 0)
+            {
+                variant = dish.Variants.FirstOrDefault(item => item.Id == line.VariantId);
+                if (variant is null)
+                    return ServiceResult<List<OrderLine>>.Fail(400, $"Choose a size for {dish.Name}.");
+            }
+
+            var addons = dish.Addons.Where(item => (line.AddonIds ?? []).Contains(item.Id)).ToList();
+            var unit = (variant?.Price ?? dish.Price) + addons.Sum(item => item.Price);
+            lines.Add(new OrderLine
+            {
+                Id = Guid.NewGuid(),
+                ItemName = dish.Name,
+                MenuItemId = dish.Id,
+                VariantName = variant?.Name,
+                AddonSummary = addons.Count == 0 ? null : string.Join(", ", addons.Select(item => item.Name)),
+                Quantity = line.Quantity,
+                UnitPrice = unit,
+                Note = InputRules.Clean(line.Note)
+            });
+        }
+
+        return ServiceResult<List<OrderLine>>.Ok(lines);
+    }
 
     private static TicketDto MapTicket(GuestOrder order) =>
         new(

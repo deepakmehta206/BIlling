@@ -6,7 +6,7 @@ The counter. Billing must be on. UPI and WhatsApp are separate switches, off unt
 
 | Module | What it does |
 | --- | --- |
-| BILLING | `/billing`. Turns today's token into a bill. GST is 0, 5, 12 or 18. Discount cannot exceed the total. |
+| BILLING | `/billing`. Counter walk-in: place an order with no table and no guest phone (`POST /api/orders/counter`, table name `Counter`). Then turn today's token into a bill. GST is 0, 5, 12 or 18. Discount cannot exceed the total. |
 | UPI | Cash needs nothing extra. UPI needs this module and a UPI id on the house. The guest opens `/pay/{billId}` and scans the QR. |
 | WHATSAPP | Prepares a message for the owner phone and a `https://wa.me` link. The counter sends it from WhatsApp. No Business API key is stored. |
 | PLAY | Guest plays Thali catch on the token while the food cooks. Off until the super admin grants it. A restaurant admin cannot turn it on. |
@@ -15,7 +15,7 @@ One claim per token. The server turns the score into 0, 5, 10 or 15 percent and 
 
 A bill copies the token's dish names and prices. The server calculates GST and the total. The guest token shows a UPI QR for subtotal plus 5% GST, and that same QR is stored on the bill. Pressing Paid cuts the bill as soon as payment is received: the token is Served, the table is freed when no other open token remains, stock is consumed, and the owner WhatsApp is prepared. Cash still cuts a paid bill from the form, with the GST and discount the counter chooses. An unpaid UPI bill can still be marked paid later. Print opens an 80mm slip with the house, lines, GST, discount, total, and the payment QR. Today's list prints that same slip.
 
-Bill numbers start at 1 each India service date. One live token has one bill that is not cancelled. Extra dishes ordered from the same table before that bill is cut stay on the same token, so the counter still cuts one bill for the visit.
+Bill numbers start at 1 each India service date. One live token has one bill that is not cancelled. Extra dishes ordered from the same table before that bill is cut stay on the same token, so the counter still cuts one bill for the visit. A counter walk-in always opens a new token; it does not merge into another Counter order.
 
 ## Audit
 

@@ -80,6 +80,10 @@ public class OrdersController(IFloorService floor) : ControllerBase
     [HttpPut("{id:guid}/status")]
     public async Task<IActionResult> Status([FromQuery] Guid? restaurantId, Guid id, SetOrderStatusRequest request, CancellationToken cancellationToken) =>
         ApiResults.From(await floor.SetOrderStatusAsync(restaurantId, id, request, cancellationToken));
+
+    [HttpPost("counter")]
+    public async Task<IActionResult> Counter([FromQuery] Guid? restaurantId, PlaceOrderRequest request, CancellationToken cancellationToken) =>
+        ApiResults.From(await floor.PlaceCounterOrderAsync(restaurantId, request, cancellationToken));
 }
 
 [AllowAnonymous]

@@ -11,6 +11,88 @@
   </header>
   @if (error()) { <p class="banner bad">{{ error() }}</p> }
 
+  <section class="panel counter-order">
+    <h2>Counter order</h2>
+    <p class="fine">Walk-in without a table or guest phone. Place the order here, then cut the bill.</p>
+    <div class="counter-split">
+      <div class="counter-menu-side">
+        @if (!dishes().length) {
+          <p class="muted">No dishes on the menu yet.</p>
+        } @else {
+          <div class="search-row counter-search">
+            <input type="search" autocomplete="off" placeholder="Search dish or category" [value]="dishQuery()" (input)="setDishQuery($event)" />
+          </div>
+          <div class="counter-menu">
+            @for (group of categories(); track group[0]) {
+              <h3>{{ group[0] }}</h3>
+              <ul class="counter-dishes">
+                @for (item of group[1]; track item.id) {
+                  <li>
+                    <div class="dish-top">
+                      <span class="dot" [class.veg]="item.foodType === 'Veg'" [class.egg]="item.foodType === 'Egg'" [class.nonveg]="item.foodType === 'NonVeg'"></span>
+                      <strong>{{ item.name }}</strong>
+                    </div>
+                    <span class="price-tag">{{ item.price | currency: 'INR' : 'symbol' : '1.2-2' }}</span>
+                    @if (item.variants.length) {
+                      <div class="choice-row">
+                        @for (variant of item.variants; track variant.id) {
+                          <button type="button" class="chip" [class.on]="choice(item).variantId === variant.id" (click)="pickVariant(item, variant.id || '')">
+                            {{ variant.name }}
+                          </button>
+                        }
+                      </div>
+                    }
+                    @if (item.addons.length) {
+                      <div class="choice-row">
+                        @for (addon of item.addons; track addon.id) {
+                          <button type="button" class="chip" [class.on]="choice(item).addonIds.includes(addon.id || '')" (click)="toggleAddon(item, addon.id || '')">
+                            {{ addon.name }}
+                          </button>
+                        }
+                      </div>
+                    }
+                    <button type="button" class="btn ghost tiny" (click)="add(item)">Add</button>
+                  </li>
+                }
+              </ul>
+            } @empty {
+              <p class="muted">No dish matches that search.</p>
+            }
+          </div>
+        }
+      </div>
+
+      <aside class="counter-cart">
+        <h3>This order</h3>
+        @if (cart().length) {
+          <ul class="plain">
+            @for (line of cart(); track line.key) {
+              <li class="cart-line">
+                <div>
+                  <strong>{{ line.name }}</strong>
+                  <span>{{ line.unit * line.quantity | currency: 'INR' : 'symbol' : '1.2-2' }}</span>
+                </div>
+                <div class="qty">
+                  <button type="button" (click)="setQty(line.key, -1)" [attr.aria-label]="'Remove one ' + line.name">−</button>
+                  <span>{{ line.quantity }}</span>
+                  <button type="button" (click)="setQty(line.key, 1)" [attr.aria-label]="'Add one ' + line.name">+</button>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="muted">Add dishes from the menu.</p>
+        }
+        <label>Guest name
+          <input type="text" autocomplete="name" placeholder="Optional" [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" />
+        </label>
+        <button type="button" class="btn solid" [disabled]="!cart().length" (click)="placeCounter()">
+          Place order · {{ cartCount() }} · {{ cartTotal() | currency: 'INR' : 'symbol' : '1.2-2' }}
+        </button>
+      </aside>
+    </div>
+  </section>
+
   <section class="split">
     <div class="panel">
       <h2>Open tokens</h2>
@@ -49,12 +131,16 @@
         </ul>
         <form class="stack" (ngSubmit)="cut()">
           <label>GST
-            <select [ngModel]="gst()" (ngModelChange)="setGst($event)" name="gst">
-              <option [ngValue]="0">0%</option>
-              <option [ngValue]="5">5%</option>
-              <option [ngValue]="12">12%</option>
-              <option [ngValue]="18">18%</option>
-            </select>
+            <span class="pick" [class.open]="openPick() === 'gst'" (click)="$event.stopPropagation()">
+              <button type="button" class="pick-btn" [attr.aria-expanded]="openPick() === 'gst'" (click)="togglePick('gst')">{{ gst() }}%</button>
+              @if (openPick() === 'gst') {
+                <ul class="pick-list">
+                  @for (rate of gstRates; track rate) {
+                    <li><button type="button" [class.on]="gst() === rate" (click)="setGst(rate)">{{ rate }}%</button></li>
+                  }
+                </ul>
+              }
+            </span>
           </label>
           <label>Discount
             <input class="amount" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0.00" [value]="discountText()" (input)="setDiscount($event)" name="discount" />
@@ -74,7 +160,7 @@
       } @else if (latest(); as bill) {
         <p class="eyebrow">Bill {{ bill.billNumber }} · {{ bill.status }}</p>
         <h2>{{ bill.total | currency: 'INR' : 'symbol' : '1.2-2' }}</h2>
-        <p>{{ bill.tableName }} · {{ bill.guestName }} · GST {{ bill.gstPercent }}%</p>
+        <p>{{ bill.tableName || 'Counter' }} · {{ bill.guestName || 'Guest' }} · GST {{ bill.gstPercent }}%</p>
         @if (qr(bill); as src) {
           <img class="upi-qr" [src]="src" alt="UPI QR" />
           <p class="fine"><a [href]="payLink(bill)">Guest pay page</a></p>

@@ -163,6 +163,10 @@ export class Api {
     return this.http.post<HouseBill>(`${this.base}/bills`, body, { params: this.house(restaurantId) });
   }
 
+  placeCounterOrder(restaurantId: string, body: unknown) {
+    return this.http.post<Ticket>(`${this.base}/orders/counter`, body, { params: this.house(restaurantId) });
+  }
+
   markBillPaid(restaurantId: string, id: string) {
     return this.http.post<HouseBill>(`${this.base}/bills/${id}/paid`, {}, { params: this.house(restaurantId) });
   }

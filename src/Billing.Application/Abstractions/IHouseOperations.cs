@@ -22,6 +22,7 @@ public interface IFloorService
     Task<ServiceResult<BookingDto>> CancelBookingAsync(Guid? restaurantId, Guid bookingId, CancellationToken cancellationToken);
     Task<ServiceResult<IReadOnlyList<TicketDto>>> GetTicketsAsync(Guid? restaurantId, CancellationToken cancellationToken);
     Task<ServiceResult<TicketDto>> SetOrderStatusAsync(Guid? restaurantId, Guid orderId, SetOrderStatusRequest request, CancellationToken cancellationToken);
+    Task<ServiceResult<TicketDto>> PlaceCounterOrderAsync(Guid? restaurantId, PlaceOrderRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<PublicTableDto>> GetPublicTableAsync(string qrToken, CancellationToken cancellationToken);
     Task<ServiceResult<PublicOrderDto>> PlacePublicOrderAsync(string qrToken, PlaceOrderRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<PublicOrderDto>> GetPublicOrderAsync(Guid orderId, CancellationToken cancellationToken);
