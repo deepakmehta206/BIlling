@@ -1,5 +1,5 @@
 const localApi = 'http://localhost:5254';
-const liveApi = 'https://advanceticketnow.com';
+const liveApi = 'https://deepakmehta206-001-site24.jtempurl.com';
 
 function savedOrigin() {
   try {

@@ -58,7 +58,8 @@ builder.Services.AddCors(options =>
                 "capacitor://localhost",
                 "https://advanceticketnow.com",
                 "https://www.advanceticketnow.com",
-                "https://portal.advanceticketnow.com")
+                "https://portal.advanceticketnow.com",
+                "https://deepakmehta206-001-site24.jtempurl.com")
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
